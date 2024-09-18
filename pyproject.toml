@@ -1,0 +1,41 @@
+[tool.poetry]
+name = "crawlingcluster"
+version = "0.1.0"
+description = ""
+authors = ["skip"]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "3.12.3"
+pandas = "^2.2.2"
+numpy = "^2.1.1"
+bs4 = "^0.0.2"
+selenium = "^4.24.0"
+black = "^24.8.0"
+pylint = "^3.2.7"
+mypy = "^1.11.2"
+aiohttp = "^3.10.5"
+requests = "^2.32.3"
+webdriver-manager = "^4.0.2"
+pymysql = "^1.1.1"
+boto3 = "^1.35.19"
+configparser = "^7.1.0"
+faker = "^28.4.1"
+fake-useragent = "^1.5.1"
+konlpy = "^0.6.0"
+jpype1 = "^1.5.0"
+pytest-asyncio = "^0.24.0"
+selenium-stealth = "^1.0.6"
+pydantic = "^2.9.2"
+pydantic-settings = "^2.5.2"
+setuptools = "^75.1.0"
+undetected-chromedriver = "^3.5.5"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+
+[tool.pytest.ini_options]
+asyncio_default_fixture_loop_scope = "function"
