@@ -1,6 +1,7 @@
 from itertools import chain
 from typing import Generator
 
+from concurrent.futures import ThreadPoolExecutor
 from src.core.types import UrlDictCollect
 from src.parsing.bs_parsing import (
     GoogleNewsCrawlingParsingDrive as GoogleNews,
@@ -17,15 +18,19 @@ from src.utils.parsing_util import (
 
 
 # 공통 로직을 함수로 추출하여 중복 제거
-def create_news_data(title: str, article_time: str, *url_type) -> dict:
+def create_news_data(title: str, article_time: str, url_type: tuple) -> dict:
     """공통 포맷으로 뉴스 데이터를 생성"""
-    url = href_from_a_tag(*url_type)
-    return NewsDataFormat.create(
-        title=title,
-        article_time=parse_time_ago(article_time),
-        url=href_from_a_tag(*url_type),
-        content=url_news_text(url),
-    ).model_dump()
+    with ThreadPoolExecutor(max_workers=3) as pool:
+        future_href = pool.submit(href_from_a_tag, url_type)
+        url = future_href.result()
+
+        content = pool.submit(url_news_text, url)
+        return NewsDataFormat.create(
+            title=title,
+            article_time=parse_time_ago(article_time),
+            url=url,
+            content=content.result(),
+        ).model_dump()
 
 
 class GoogleNewsDataCrawling(GoogleNews):
@@ -43,7 +48,7 @@ class GoogleNewsDataCrawling(GoogleNews):
             create_news_data(
                 title=href_from_text_preprocessing(a_tag.text[:20]),
                 article_time=self.news_create_time_from_div(a_tag),
-                url=(a_tag),
+                url_type=(a_tag),
             )
             for div_1 in self.extract_content_div(tag)
             for a_tag in self.extract_links_from_div(div_1)
@@ -74,7 +79,7 @@ class BingNewsDataCrawling(BingNews):
             create_news_data(
                 title=div_2.text[:20],
                 article_time=i,
-                url=(div_2, "url"),
+                url_type=(div_2, "url"),
             )
             for div_2 in self.div_in_class(html, attr)
             for i in self.news_create_time_from_div(div_2)
@@ -119,7 +124,7 @@ class DaumNewsDataCrawling(DaumNews):
             create_news_data(
                 title=self.strong_in_class(div_2).find("a").get_text(strip=True),
                 article_time=self.span_in_class(div_2).get_text(strip=True),
-                url=(self.strong_in_class(div_2).find("a")),
+                url_type=(self.strong_in_class(div_2).find("a")),
             )
             for div_2 in self.li_in_data_docid(tag)
         )

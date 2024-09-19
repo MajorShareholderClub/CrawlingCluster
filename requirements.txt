@@ -26,5 +26,5 @@ pydantic-settings
 bs4
 selenium
 selenium-stealth
-undetected_chromedriver
+undetected-chromedriver
 webdriver-manager

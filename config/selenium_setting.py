@@ -1,3 +1,4 @@
+import time
 import undetected_chromedriver as uc
 from fake_useragent import UserAgent
 from selenium_stealth import stealth
@@ -21,8 +22,8 @@ def chrome_option_setting() -> uc.Chrome:
     option_chrome.add_argument("--disable-extensions")
     option_chrome.add_argument("--no-sandbox")
     option_chrome.add_argument("--disable-dev-shm-usage")
-    option_chrome.add_argument("--disable-logging")  # 로깅 비활성화
-
+    option_chrome.add_argument("--enable-logging")
+    option_chrome.add_argument("--v=1")
     option_chrome.add_argument(f"user-agent={ua.random}")
 
     caps = DesiredCapabilities().CHROME
@@ -60,15 +61,15 @@ def chrome_option_setting() -> uc.Chrome:
     }
     option_chrome.add_experimental_option("prefs", prefs)
     from webdriver_manager.chrome import ChromeDriverManager
-    from selenium.webdriver.chrome.service import Service as ChromeService
+    from selenium.webdriver.chrome.service import Service
 
     webdirver_chrome = uc.Chrome(
         options=option_chrome,
         enable_cdp_events=True,
         incognito=True,
-        service=ChromeDriverManager(driver_version="129.0.6668.58").install(),
+        headless=True,
+        service=Service(ChromeDriverManager(driver_version="129.0.6668.58").install()),
     )
-
     stealth(
         webdirver_chrome,
         vendor="Google Inc. ",

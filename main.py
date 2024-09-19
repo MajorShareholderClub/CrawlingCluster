@@ -33,9 +33,9 @@ def main():
     count = 1  # 필요한 경우 카운트를 수정
 
     functions: list[Callable[[str, int], None]] = [
-        process_naver,
-        # process_google,
-        # process_daum,
+        # process_naver,
+        process_google,
+        process_daum,
         # process_bing,
     ]
 

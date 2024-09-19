@@ -24,6 +24,8 @@ from src.parsing.news_parsing import (
     DaumNewsDataCrawling,
 )
 
+logging.basicConfig(level=logging.ERROR)
+
 
 def page_scroll(driver: ChromeDriver, *scoll: tuple[int]) -> None:
     """스크롤 계산 5번 걸처서 내리기"""
@@ -155,7 +157,6 @@ class BingSeleniumMovingElementLocation(BingNewsDataCrawling):
         finally:
             self.logging(logging.INFO, "Bing 수집 종료")
             self.driver.quit()
-
         return data
 
 
@@ -169,6 +170,9 @@ class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
         self.url = f"https://search.daum.net/search?w=news&nil_search=btn&DA=NTB&enc=utf8&cluster=y&cluster_page=1&q={target}"
         self.driver: ChromeDriver = chrome_option_setting()
         self.count = count if count - 3 <= 0 else count - 3
+        self.logging = AsyncLogger(
+            target="Daum", log_file="Daum_selenium.log"
+        ).log_message_sync
         # self.count = count - 3
 
     def next_page_moving(self, xpath: str) -> Any:
@@ -186,7 +190,7 @@ class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
         """
         self.driver.get(self.url)
         data = deque()
-
+        self.logging(logging.INFO, "다음 크롤링 시작합니다")
         if self.count <= 4:
             for i in range(1, self.count + 1):
                 page_scroll(self.driver, int(random.uniform(10000, 10000)))
@@ -210,6 +214,7 @@ class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
             print(self.news_info_collect(self.driver.page_source))
             next_page_button.click()
             self.count -= 1
-
-        self.driver.quit()
+        else:
+            self.logging(logging.INFO, "다음 크롤링 종료합니다")
+            self.driver.quit()
         return data
