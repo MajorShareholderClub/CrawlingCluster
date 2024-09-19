@@ -30,6 +30,8 @@ pydantic = "^2.9.2"
 pydantic-settings = "^2.5.2"
 setuptools = "^75.1.0"
 undetected-chromedriver = "^3.5.5"
+apache-airflow = "^2.10.1"
+apache-airflow-providers-mysql = "^5.7.0"
 
 
 [build-system]

@@ -1,4 +1,5 @@
 import asyncio
+from typing import Callable
 from concurrent.futures import ThreadPoolExecutor
 
 from src.driver.naver_news_driver import AsyncNaverNewsParsingDriver
@@ -7,34 +8,41 @@ from src.driver.selenium_driver import BingSeleniumMovingElementLocation
 from src.driver.selenium_driver import DaumSeleniumMovingElementsLocation
 
 
-def process_naver():
+def process_naver(query: str, count: int) -> None:
     """Naver 크롤링"""
-    asyncio.run(AsyncNaverNewsParsingDriver("비트코인", 10).extract_news_urls())
+    asyncio.run(AsyncNaverNewsParsingDriver(query, count).extract_news_urls())
 
 
-def process_google():
+def process_google(query: str, count: int) -> None:
     """Google 크롤링"""
-    GoogleSeleniumMovingElementLocation("비트코인", 1).begin_page_navigation()
+    GoogleSeleniumMovingElementLocation(query, count).begin_page_navigation()
 
 
-def process_daum():
+def process_daum(query: str, count: int) -> None:
     """Daum 크롤링"""
-    DaumSeleniumMovingElementsLocation("비트코인", 1).page_injection()
+    DaumSeleniumMovingElementsLocation(query, count).page_injection()
 
 
-def process_bing():
+def process_bing(query: str, count: int) -> None:
     """Bing 크롤링"""
-    BingSeleniumMovingElementLocation("비트코인", 1).repeat_scroll()
+    BingSeleniumMovingElementLocation(query, count).repeat_scroll()
 
 
 def main():
+    queries = ["비트코인"]  # 여기서 필요한 쿼리를 정의
+    count = 1  # 필요한 경우 카운트를 수정
+
+    functions: list[Callable[[str, int], None]] = [
+        process_naver,
+        # process_google,
+        # process_daum,
+        # process_bing,
+    ]
+
     with ThreadPoolExecutor(max_workers=4) as executor:
-        futures = [
-            executor.submit(process_naver),
-            executor.submit(process_google),
-            executor.submit(process_daum),
-            executor.submit(process_bing),
-        ]
+        # 각 함수와 인수를 매핑합니다.
+        futures = [executor.submit(fn, queries, count) for fn in functions]
+
         # 모든 작업이 완료될 때까지 기다립니다.
         for future in futures:
             future.result()

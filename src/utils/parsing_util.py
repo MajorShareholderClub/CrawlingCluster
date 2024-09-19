@@ -84,6 +84,7 @@ class NewsDataFormat(BaseModel):
     title: str
     article_time: str
     timestamp: str
+    content: str | None
 
     @classmethod
     def create(cls, **kwargs) -> NewsDataFormat:

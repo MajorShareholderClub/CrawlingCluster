@@ -1,20 +1,28 @@
 from itertools import chain
+from typing import Generator
 
-from typing import Any, Generator
 from src.core.types import UrlDictCollect
 from src.parsing.bs_parsing import (
     GoogleNewsCrawlingParsingDrive as GoogleNews,
     BingNewsCrawlingParsingDrive as BingNews,
     DaumNewsCrawlingParsingDrive as DaumNews,
 )
-
-
 from src.utils.parsing_util import (
     href_from_text_preprocessing,
     href_from_a_tag,
     parse_time_ago,
     NewsDataFormat,
 )
+
+
+# 공통 로직을 함수로 추출하여 중복 제거
+def create_news_data(title: str, article_time: str, *url_type) -> dict:
+    """공통 포맷으로 뉴스 데이터를 생성"""
+    return NewsDataFormat.create(
+        title=title,
+        article_time=parse_time_ago(article_time),
+        url=href_from_a_tag(*url_type),
+    ).model_dump()
 
 
 class GoogleNewsDataCrawling(GoogleNews):
@@ -29,11 +37,11 @@ class GoogleNewsDataCrawling(GoogleNews):
             dict: 뉴스 제목, 기사 시간, URL, context가 포함된 딕셔너리
         """
         return (
-            NewsDataFormat.create(
+            create_news_data(
                 title=href_from_text_preprocessing(a_tag.text[:20]),
-                article_time=parse_time_ago(self.news_create_time_from_div(a_tag)),
-                url=href_from_a_tag(a_tag),
-            ).model_dump()
+                article_time=self.news_create_time_from_div(a_tag),
+                url=(a_tag),
+            )
             for div_1 in self.extract_content_div(tag)
             for a_tag in self.extract_links_from_div(div_1)
         )
@@ -60,11 +68,11 @@ class BingNewsDataCrawling(BingNews):
             dict: 뉴스 제목, 기사 시간, URL, context가 포함된 딕셔너리
         """
         return (
-            NewsDataFormat.create(
+            create_news_data(
                 title=div_2.text[:20],
-                url=href_from_a_tag(div_2, "url"),
-                article_time=parse_time_ago(i),
-            ).model_dump()
+                article_time=i,
+                url=(div_2, "url"),
+            )
             for div_2 in self.div_in_class(html, attr)
             for i in self.news_create_time_from_div(div_2)
         )
@@ -105,13 +113,11 @@ class DaumNewsDataCrawling(DaumNews):
             dict: 뉴스 제목, 기사 시간, URL, context가 포함된 딕셔너리
         """
         return (
-            NewsDataFormat.create(
-                title=href_from_a_tag(self.strong_in_class(div_2).find("a")),
-                url=self.strong_in_class(div_2).find("a").get_text(strip=True),
-                article_time=parse_time_ago(
-                    self.span_in_class(div_2).get_text(strip=True)
-                ),
-            ).model_dump()
+            create_news_data(
+                title=self.strong_in_class(div_2).find("a").get_text(strip=True),
+                article_time=self.span_in_class(div_2).get_text(strip=True),
+                url=(self.strong_in_class(div_2).find("a")),
+            )
             for div_2 in self.li_in_data_docid(tag)
         )
 
