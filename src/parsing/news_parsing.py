@@ -11,6 +11,7 @@ from src.utils.parsing_util import (
     href_from_text_preprocessing,
     href_from_a_tag,
     parse_time_ago,
+    url_news_text,
     NewsDataFormat,
 )
 
@@ -18,10 +19,12 @@ from src.utils.parsing_util import (
 # 공통 로직을 함수로 추출하여 중복 제거
 def create_news_data(title: str, article_time: str, *url_type) -> dict:
     """공통 포맷으로 뉴스 데이터를 생성"""
+    url = href_from_a_tag(*url_type)
     return NewsDataFormat.create(
         title=title,
         article_time=parse_time_ago(article_time),
         url=href_from_a_tag(*url_type),
+        content=url_news_text(url),
     ).model_dump()
 
 

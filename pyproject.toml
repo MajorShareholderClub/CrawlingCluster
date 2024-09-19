@@ -32,6 +32,8 @@ setuptools = "^75.1.0"
 undetected-chromedriver = "^3.5.5"
 apache-airflow = "^2.10.1"
 apache-airflow-providers-mysql = "^5.7.0"
+newspaper3k = "^0.2.8"
+lxml-html-clean = "^0.2.2"
 
 
 [build-system]

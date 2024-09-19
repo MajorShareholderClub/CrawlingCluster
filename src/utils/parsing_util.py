@@ -6,6 +6,7 @@ from datetime import timedelta, datetime
 
 import re
 from bs4 import BeautifulSoup
+from newspaper import Article
 
 
 def time_extract(format: str) -> str:
@@ -94,3 +95,10 @@ class NewsDataFormat(BaseModel):
         # kwargs에 timestamp를 추가하여 NewsData 인스턴스 생성
         kwargs["timestamp"] = korea_seoul_time
         return cls(**kwargs)
+
+
+def url_news_text(url: str) -> str:
+    a = Article(url=url, language="ko")
+    a.download()
+    a.parse()
+    return a.text

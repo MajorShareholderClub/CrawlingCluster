@@ -12,41 +12,16 @@ test_naver.py .  [100%]
 ============================================================================================================ 1 passed in 0.84s ============================================================================================================
 """
 
+import asyncio
 import logging
-import datetime
 from config.properties import naver_id, naver_secret, naver_url
+from concurrent.futures import ThreadPoolExecutor
 
 from collections import deque
 from src.core.types import SelectHtmlOrJson, UrlDictCollect
-from src.utils.acquisition import AsyncRequestHTML, AsyncRequestJSON
+from src.utils.acquisition import AsyncRequestJSON
 from src.utils.logger import AsyncLogger
-from src.utils.parsing_util import time_extract, NewsDataFormat
-import requests
-from bs4 import BeautifulSoup
-
-
-def extract_text_from_url(url: str) -> str:
-    """
-    Args:
-        url (str): 뉴스 기사 URL
-
-    Returns:
-        str: 추출된 기사 본문 텍스트
-    """
-    try:
-        soup = BeautifulSoup(url, "lxml")
-
-        # 일반적인 뉴스 본문 구조 (예시: article 태그, div 태그, p 태그)
-        article = soup.find("article")
-        if article:
-            paragraphs = article.find_all("p")
-        else:
-            paragraphs = soup.find_all("p")
-
-        # 텍스트를 모두 연결하여 반환
-        return "\n".join([p.get_text() for p in paragraphs])
-    except Exception:
-        pass
+from src.utils.parsing_util import time_extract, NewsDataFormat, url_news_text
 
 
 class AsyncNaverNewsParsingDriver:
@@ -71,6 +46,7 @@ class AsyncNaverNewsParsingDriver:
         self._logging = AsyncLogger(
             target="naver", log_file="naver_crawling.log"
         ).log_message_sync
+        self.executor = ThreadPoolExecutor(max_workers=10)
 
     async def fetch_page_urls(self) -> SelectHtmlOrJson:
         """JSON 비동기 호출
@@ -90,6 +66,19 @@ class AsyncNaverNewsParsingDriver:
             )
             return False
 
+    async def _fetch_url_news_text(self, url: str) -> str:
+        """비동기 실행"""
+        loop = asyncio.get_event_loop()
+        return await loop.run_in_executor(self.executor, url_news_text, url)
+
+    async def data_format(self, item: dict[str, str]) -> dict[str, str]:
+        return NewsDataFormat.create(
+            url=item["originallink"],
+            title=item["title"],
+            article_time=time_extract(item["pubDate"]),
+            content=await self._fetch_url_news_text(item["originallink"]),
+        ).model_dump()
+
     async def extract_news_urls(self) -> UrlDictCollect:
         """new parsing
         Args:
@@ -99,31 +88,12 @@ class AsyncNaverNewsParsingDriver:
             UrlCollect: [URL, ~]
         """
 
-        def data_format(item: dict[str, str]) -> dict[str, str]:
-            return {
-                "title": item["title"],
-                "article_time": time_extract(item["pubDate"]),
-                "url": item["originallink"],
-                "timestamp": datetime.datetime.now().strftime("%Y-%m-%d: %H:%M:%S"),
-            }
-
-        # NewsDataFormat.create(
-        #     url=item["originallink"],
-        #     title=item["title"],
-        #     article_time=time_extract(item["pubDate"]),
-        #     content=
-        # )
         self._logging(logging.INFO, "네이버 시작합니다")
         res_data = await self.fetch_page_urls()
 
-        for i in res_data["items"]:
-            print(i)
-            # a = await AsyncRequestHTML(i["originallink"]).async_fetch_html("naver")
-            # print(extract_text_from_url(a))
+        data = list(map(lambda item: self.data_format(item), res_data["items"]))
+        s = await asyncio.gather(*data)
 
-        # fmt: off
-        data: list[dict[str, str]] = list(map(lambda item: data_format(item), res_data["items"]))
-        urls = deque(data)
-        self._logging(logging.INFO, f"네이버에서 --> {len(urls)}개 의 뉴스를 가지고 왔습니다")
-
+        urls = deque(s)
+        self._logging(logging.INFO, f"네이버에서 --> {len(urls)}개 의 뉴스 수집")
         return urls
