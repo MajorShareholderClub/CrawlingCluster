@@ -27,8 +27,9 @@ from src.parsing.news_parsing import (
 logging.basicConfig(level=logging.ERROR)
 
 
-def page_scroll(driver: ChromeDriver, *scoll: tuple[int]) -> None:
+def page_scroll(driver: ChromeDriver) -> None:
     """스크롤 계산 5번 걸처서 내리기"""
+    scroll = [int(random.uniform(10000, 10000 + i * 1000)) for i in range(4)]
 
     def scroll_page(scroll_cal: int, scoll: int, with_delay: bool) -> None:
         for i in range(int(scoll)):
@@ -37,7 +38,7 @@ def page_scroll(driver: ChromeDriver, *scoll: tuple[int]) -> None:
                 time.sleep(1)
 
     prev_height = driver.execute_script("return document.body.scrollHeight")
-    random_seleted_scroll: tuple[int] = random.choice(scoll)
+    random_seleted_scroll: tuple[int] = random.choice(scroll)
     scroll_cal: float = prev_height / random_seleted_scroll
 
     # 랜덤으로 with_delay 값을 결정
@@ -78,7 +79,7 @@ class GoogleSeleniumMovingElementLocation(GoogleNewsDataCrawling):
             p: UrlDictCollect = self.news_info_collect(html=self.driver.page_source)
             next_page_button.click()
             self.driver.implicitly_wait(random.uniform(5.0, 10.0))
-            page_scroll(self.driver, 2, 3, 4, SCORLL_ITERATION)
+            page_scroll(self.driver)
             data.append(p)
         else:
             self.logging(logging.INFO, f"google 수집 종료")
@@ -90,19 +91,19 @@ class GoogleSeleniumMovingElementLocation(GoogleNewsDataCrawling):
 
         def mo_xpath_injection(start: int) -> str:
             """google mobile xpath 경로 start는 a tag 기점 a -> a[2]"""
-            if start == 2:
-                return f'//*[@id="wepR4d"]/div/span/a'
+            # if start == 2:
+            #     return f'//*[@id="wepR4d"]/div/span/a'
             return f'//*[@id="wepR4d"]/div/span/a[{start-1}]'
 
         def pa_xpath_injection(start: int) -> str:
             """google site xpath 경로 start는 tr/td[3](page 2) ~ 기점"""
-            if start == 1 or 2:
-                return '//*[@id="botstuff"]/div/div[3]/table/tbody/tr/td[2]'
+            # if start == 1 or 2:
+            #     return '//*[@id="botstuff"]/div/div[3]/table/tbody/tr/td[2]'
             return f'//*[@id="botstuff"]/div/div[3]/table/tbody/tr/td[{start}]/a'
 
         self.driver.get(self.url)
         try:
-            return self.scroll_through_pages(1, pa_xpath_injection)
+            return self.scroll_through_pages(3, pa_xpath_injection)
         except NoSuchElementException:
             return self.scroll_through_pages(2, mo_xpath_injection)
         except WebDriverException as e:
@@ -193,7 +194,7 @@ class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
         self.logging(logging.INFO, "다음 크롤링 시작합니다")
         if self.count <= 4:
             for i in range(1, self.count + 1):
-                page_scroll(self.driver, int(random.uniform(10000, 10000)))
+                page_scroll(self.driver)
                 self.driver.implicitly_wait(random.uniform(5.0, 10.0))
                 time.sleep(1)
                 next_page_button = self.next_page_moving(
@@ -204,7 +205,7 @@ class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
                 next_page_button.click()
 
         while self.count:
-            page_scroll(self.driver, int(random.uniform(10000, 10000)))
+            page_scroll(self.driver)
             self.driver.implicitly_wait(random.uniform(5.0, 10.0))
             time.sleep(1)
             next_page_button = self.next_page_moving(

@@ -33,8 +33,8 @@ class Crawler:
     async def process_google(self) -> None:
         await self.process_crawling(GoogleSeleniumMovingElementLocation, "begin_page_navigation")
 
-    async def process_daum(self) -> None:
-        await self.process_crawling(DaumSeleniumMovingElementsLocation, "page_injection")
+    # async def process_daum(self) -> None:
+    #     await self.process_crawling(DaumSeleniumMovingElementsLocation, "page_injection")
 
     async def process_bing(self) -> None:
         await self.process_crawling(BingSeleniumMovingElementLocation, "repeat_scroll")
@@ -47,7 +47,6 @@ class Crawler:
             (AsyncNaverNewsParsingDriver, "news_colletor"),
             (AsyncDaumrNewsParsingDriver, "news_colletor"),
             (GoogleSeleniumMovingElementLocation, "begin_page_navigation"),
-            (DaumSeleniumMovingElementsLocation, "page_injection"),
             (BingSeleniumMovingElementLocation, "repeat_scroll"),
         ]
 

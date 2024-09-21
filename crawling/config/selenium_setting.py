@@ -1,4 +1,3 @@
-import time
 import undetected_chromedriver as uc
 from fake_useragent import UserAgent
 from selenium_stealth import stealth
