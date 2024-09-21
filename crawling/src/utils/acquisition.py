@@ -63,8 +63,7 @@ class AsyncRequestAcquisitionHTML(AbstractAsyncRequestAcquisition):
  
  
 class AsyncRequestUrlStatus(AsyncRequestAcquisitionHTML):
-    """URL Status(200이 아닐 경우) 또는 주소(200일 경우) 호출"""
-    
+    """URL Status(200이 아닐 경우) 또는 주소(200일 경우) 호출"""    
     async def async_request_status(self) -> UrlStatusCodeOrUrlAddress:
         self.logging.log_message_sync(logging.INFO, f"URL statue를 요청했습니다")
         return await self.async_type(type_="request")

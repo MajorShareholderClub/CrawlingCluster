@@ -1,4 +1,5 @@
 from typing import Union, TypedDict, Any, Deque
+
 import undetected_chromedriver as uc
 
 

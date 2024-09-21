@@ -102,14 +102,14 @@ class AsyncLogger:
         return QueueListener(self.log_queue, self.console_handler, self.file_handler)
 
     def _setup_logger(self) -> logging.Logger:
-        """
-        로거 초기화
-
-        Returns:
-            - logging.Logger: Logger 인스턴스
-        """
+        """로거 초기화"""
         logger = logging.getLogger(f"AsyncLogger-{self.target}")
         logger.setLevel(logging.DEBUG)
+
+        # 기존 핸들러 제거
+        if logger.hasHandlers():
+            logger.handlers.clear()
+
         logger.addHandler(self.queue_handler)
         return logger
 
