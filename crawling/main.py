@@ -46,9 +46,9 @@ class Crawler:
         crawlers = [
             (AsyncNaverNewsParsingDriver, "news_colletor"),
             (AsyncDaumrNewsParsingDriver, "news_colletor"),
-            # (GoogleSeleniumMovingElementLocation, "begin_page_navigation"),
-            # (DaumSeleniumMovingElementsLocation, "page_injection"),
-            # (BingSeleniumMovingElementLocation, "repeat_scroll"),
+            (GoogleSeleniumMovingElementLocation, "begin_page_navigation"),
+            (DaumSeleniumMovingElementsLocation, "page_injection"),
+            (BingSeleniumMovingElementLocation, "repeat_scroll"),
         ]
 
         for crawler_class, method_name in crawlers:
