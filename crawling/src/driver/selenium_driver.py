@@ -85,7 +85,7 @@ class GoogleSeleniumMovingElementLocation(GoogleNewsDataCrawling):
             self.driver.quit()
         return data
 
-    def begin_page_navigation(self) -> deque[UrlDictCollect]:
+    def begin_page_navigation(self) -> UrlDictCollect:
         """페이지 수집 이동 본체"""
 
         def mo_xpath_injection(start: int) -> str:
@@ -126,7 +126,7 @@ class BingSeleniumMovingElementLocation(BingNewsDataCrawling):
         self.driver: ChromeDriver = chrome_option_setting()
         self.logging = AsyncLogger("bing", "selenium_bing.log").log_message_sync
 
-    def repeat_scroll(self) -> deque[UrlDictCollect]:
+    def repeat_scroll(self) -> UrlDictCollect:
         """Bing은 무한 스크롤이기에 횟수만큼 페이지를 내리도록 하였음"""
         data = deque()
         self.driver.get(self.url)
@@ -210,8 +210,8 @@ class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
             next_page_button = self.next_page_moving(
                 f'//*[@id="dnsColl"]/div[2]/div/div/a[{3}]'
             )
-            data.append(next_page_button)
-            print(self.news_info_collect(self.driver.page_source))
+            page = self.news_info_collect(self.driver.page_source)
+            data.append(page)
             next_page_button.click()
             self.count -= 1
         else:

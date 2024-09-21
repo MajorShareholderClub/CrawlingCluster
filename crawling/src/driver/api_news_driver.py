@@ -14,39 +14,29 @@ test_naver.py .  [100%]
 
 import asyncio
 import logging
-from config.properties import naver_id, naver_secret, naver_url
+from config.properties import naver_id, naver_secret, naver_url, daum_auth, daum_url
 from concurrent.futures import ThreadPoolExecutor
 
 from collections import deque
 from src.core.types import SelectHtmlOrJson, UrlDictCollect
-from src.utils.acquisition import AsyncRequestJSON
+from src.utils.acquisition import AsyncRequestJSON, AsyncRequestHTML
 from src.utils.logger import AsyncLogger
 from src.utils.parsing_util import time_extract, NewsDataFormat, url_news_text
 
 
-class AsyncNaverNewsParsingDriver:
-    """네이버 NewsAPI 비동기 호출"""
-
-    def __init__(self, target: str, count: int) -> None:
-        """
-        Args:
-            target (str): 긁어올 타겟
-            count (int): 횟수
-        """
-
+class AsyncNewsParsingDriver:
+    def __init__(
+        self, target: str, count: int, url: str, home: str, header: dict[str, str]
+    ) -> None:
         self.target = target
         self.count = count
-        self.header = {
-            "X-Naver-Client-Id": naver_id,
-            "X-Naver-Client-Secret": naver_secret,
-        }
-        self.url = (
-            f"{naver_url}/news.json?query={self.target}&start={self.count}&display=100"
-        )
+        self.url = url
+        self.home = home
+        self.header = header
         self._logging = AsyncLogger(
-            target="naver", log_file="naver_crawling.log"
+            target=home, log_file=f"{home}_crawling.log"
         ).log_message_sync
-        self.executor = ThreadPoolExecutor(max_workers=10)
+        self.executor = ThreadPoolExecutor(max_workers=5)
 
     async def fetch_page_urls(self) -> SelectHtmlOrJson:
         """JSON 비동기 호출
@@ -58,7 +48,7 @@ class AsyncNaverNewsParsingDriver:
         """
         try:
             load_f = AsyncRequestJSON(url=self.url, headers=self.header)
-            urls = await load_f.async_fetch_json(target="Naver")
+            urls = await load_f.async_fetch_json(target=self.home)
             return urls
         except ConnectionError as error:
             self._logging(
@@ -71,15 +61,27 @@ class AsyncNaverNewsParsingDriver:
         loop = asyncio.get_event_loop()
         return await loop.run_in_executor(self.executor, url_news_text, url)
 
-    async def data_format(self, item: dict[str, str]) -> dict[str, str]:
+    async def data_format(
+        self,
+        item: dict[str, str],
+        url_key: str = "url",
+        title_key: str = "title",
+        datetime_key: str = "datetime",
+    ) -> dict[str, str]:
         return NewsDataFormat.create(
-            url=item["originallink"],
-            title=item["title"],
-            article_time=time_extract(item["pubDate"]),
-            content=await self._fetch_url_news_text(item["originallink"]),
+            url=item[url_key],
+            title=item[title_key],
+            article_time=time_extract(item[datetime_key]),
+            content=await self._fetch_url_news_text(item[url_key]),
         ).model_dump()
 
-    async def extract_news_urls(self) -> UrlDictCollect:
+    async def extract_news_urls(
+        self,
+        element: str,
+        url_key: str = "url",
+        title_key: str = "title",
+        datetime_key: str = "datetime",
+    ) -> UrlDictCollect:
         """new parsing
         Args:
             items (str): 첫번째 접근
@@ -88,12 +90,50 @@ class AsyncNaverNewsParsingDriver:
             UrlCollect: [URL, ~]
         """
 
-        self._logging(logging.INFO, "네이버 시작합니다")
+        self._logging(logging.INFO, f"{self.home} 시작합니다")
         res_data = await self.fetch_page_urls()
 
-        data = list(map(lambda item: self.data_format(item), res_data["items"]))
+        data = list(
+            map(
+                lambda item: self.data_format(item, url_key, title_key, datetime_key),
+                res_data[element],
+            )
+        )
         s = await asyncio.gather(*data)
 
         urls = deque(s)
-        self._logging(logging.INFO, f"네이버에서 --> {len(urls)}개 의 뉴스 수집")
+        self._logging(logging.INFO, f"{self.home}에서 --> {len(urls)}개 의 뉴스 수집")
         return urls
+
+
+class AsyncNaverNewsParsingDriver(AsyncNewsParsingDriver):
+    """네이버 NewsAPI 비동기 호출"""
+
+    def __init__(self, target: str, count: int) -> None:
+        """생성자 초기화"""
+        self.header = {
+            "X-Naver-Client-Id": naver_id,
+            "X-Naver-Client-Secret": naver_secret,
+        }
+        self.url = f"{naver_url}/news.json?query={target}&start={count}&display=100"
+        super().__init__(
+            target=target, count=count, url=self.url, home="naver", header=self.header
+        )
+
+    async def news_colletor(self) -> UrlDictCollect:
+        return await self.extract_news_urls(
+            element="items", url_key="originallink", datetime_key="pubDate"
+        )
+
+
+class AsyncDaumrNewsParsingDriver(AsyncNewsParsingDriver):
+    """다음 크롤링"""
+
+    def __init__(self, target: str, count: int) -> None:
+        """생성자 초기화"""
+        self.url = f"{daum_url}?query={target} /news&page=10&size={count}"
+        self.auth = {"Authorization": f"KakaoAK {daum_auth}"}
+        super().__init__(target, count, url=self.url, home="daum", header=self.auth)
+
+    async def news_colletor(self) -> UrlDictCollect:
+        return await self.extract_news_urls(element="documents")

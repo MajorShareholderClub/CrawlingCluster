@@ -3,6 +3,7 @@ from pydantic import BaseModel
 
 import pytz
 from datetime import timedelta, datetime
+from dateutil import parser
 
 import re
 from bs4 import BeautifulSoup
@@ -10,12 +11,16 @@ from newspaper import Article
 
 
 def time_extract(format: str) -> str:
-    # 날짜와 시간 문자열을 datetime 객체로 변환
-    date_obj = datetime.strptime(format, "%a, %d %b %Y %H:%M:%S %z")
+    try:
+        # 날짜와 시간 문자열을 datetime 객체로 변환
+        date_obj = datetime.strptime(format, "%a, %d %b %Y %H:%M:%S %z")
 
-    # 원하는 형식으로 변환
-    formatted_date = date_obj.strftime("%Y-%m-%d: %H:%M:%S")
-    return formatted_date
+        # 원하는 형식으로 변환
+        formatted_date = date_obj.strftime("%Y-%m-%d: %H:%M:%S")
+        return formatted_date
+    except ValueError:
+        parsed_time = parser.parse(format)
+        return parsed_time.strftime("%Y-%m-%d %H:%M")
 
 
 def href_from_a_tag(a_tag: BeautifulSoup, element: str = "href") -> str:
@@ -24,6 +29,9 @@ def href_from_a_tag(a_tag: BeautifulSoup, element: str = "href") -> str:
     Returns:
         str: [URL, ~~]
     """
+    if isinstance(a_tag, tuple):
+        element = a_tag[1]
+        return a_tag[0].get(element)
     return a_tag.get(element)
 
 
@@ -98,7 +106,10 @@ class NewsDataFormat(BaseModel):
 
 
 def url_news_text(url: str) -> str:
-    a = Article(url=url, language="ko")
-    a.download()
-    a.parse()
-    return a.text
+    try:
+        a = Article(url=url, language="ko")
+        a.download()
+        a.parse()
+        return a.text
+    except:
+        pass
