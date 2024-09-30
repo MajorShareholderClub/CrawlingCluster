@@ -28,3 +28,6 @@ selenium
 selenium-stealth
 undetected-chromedriver
 webdriver-manager
+newspaper3k
+lxml[html_clean]       
+docker 

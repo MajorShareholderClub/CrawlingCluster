@@ -2,7 +2,7 @@ import re
 
 from bs4 import BeautifulSoup
 
-from src.utils.parsing_util import parse_time_ago
+from crawling.src.utils.parsing_util import parse_time_ago
 
 
 class GoogleNewsCrawlingParsingDrive:

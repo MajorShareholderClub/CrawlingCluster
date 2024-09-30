@@ -1,12 +1,14 @@
 import logging
 import aiohttp
 
-from src.core.types import (
+from crawling.src.core.types import (
     SelectHtmlOrJson,
     SelectResponseType,
     UrlStatusCodeOrUrlAddress,
 )
-from src.core.abstract.abstract_async_request import AbstractAsyncRequestAcquisition
+from crawling.src.core.abstract.abstract_async_request import (
+    AbstractAsyncRequestAcquisition,
+)
 
 
 # fmt: off

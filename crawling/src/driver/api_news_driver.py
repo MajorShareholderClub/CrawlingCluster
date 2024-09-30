@@ -12,10 +12,15 @@ test_naver.py .  [100%]
 ============================================================================================================ 1 passed in 0.84s ============================================================================================================
 """
 
-from config.properties import naver_id, naver_secret, naver_url, daum_auth, daum_url
-from src.parsing.news_parsing import AsyncNewsDataCrawling
-from src.core.types import UrlDictCollect
-from collections import deque
+from crawling.config.properties import (
+    naver_id,
+    naver_secret,
+    naver_url,
+    daum_auth,
+    daum_url,
+)
+from crawling.src.parsing.news_parsing import AsyncNewsDataCrawling
+from crawling.src.core.types import UrlDictCollect
 
 
 class AsyncNaverNewsParsingDriver(AsyncNewsDataCrawling):
@@ -35,7 +40,7 @@ class AsyncNaverNewsParsingDriver(AsyncNewsDataCrawling):
         data = await self.extract_news_urls(
             element="items", url_key="originallink", datetime_key="pubDate"
         )
-        return deque(data)
+        return data
 
 
 class AsyncDaumrNewsParsingDriver(AsyncNewsDataCrawling):
@@ -50,4 +55,4 @@ class AsyncDaumrNewsParsingDriver(AsyncNewsDataCrawling):
 
     async def news_colletor(self) -> UrlDictCollect:
         data = await self.extract_news_urls(element="documents")
-        return deque(data)
+        return data

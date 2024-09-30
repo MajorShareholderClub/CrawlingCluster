@@ -2,7 +2,6 @@ import undetected_chromedriver as uc
 from fake_useragent import UserAgent
 from selenium_stealth import stealth
 
-# from selenium import webdriver
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
 
 
@@ -14,6 +13,7 @@ SCORLL_ITERATION = 5
 
 
 def chrome_option_setting() -> uc.Chrome:
+    # 크롬 옵션 설정
     option_chrome = uc.ChromeOptions()
     option_chrome.add_argument("headless")
     option_chrome.add_argument("--disable-gpu")
@@ -21,12 +21,9 @@ def chrome_option_setting() -> uc.Chrome:
     option_chrome.add_argument("--disable-extensions")
     option_chrome.add_argument("--no-sandbox")
     option_chrome.add_argument("--disable-dev-shm-usage")
-    option_chrome.add_argument("--enable-logging")
-    option_chrome.add_argument("--v=1")
     option_chrome.add_argument(f"user-agent={ua.random}")
 
     caps = DesiredCapabilities().CHROME
-
     # page loading 없애기
     caps["pageLoadStrategy"] = "none"
 
@@ -58,10 +55,14 @@ def chrome_option_setting() -> uc.Chrome:
             "durable_storage": 2,
         }
     }
+
     option_chrome.add_experimental_option("prefs", prefs)
     from webdriver_manager.chrome import ChromeDriverManager
     from selenium.webdriver.chrome.service import Service
 
+    # webdriver_remote = webdriver.Remote(
+    #     "http://chrome:4444/wd/hub", options=option_chrome
+    # )
     webdirver_chrome = uc.Chrome(
         options=option_chrome,
         enable_cdp_events=True,

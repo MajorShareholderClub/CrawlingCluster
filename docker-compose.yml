@@ -270,35 +270,35 @@ services:
       airflow-init:
         condition: service_completed_successfully
 
-  chrome:
-    image: seleniarm/standalone-chromium:latest
-    container_name: chrome
-    shm_size: 2gb
-    depends_on:
-      - chromedriver
-    environment:
-      - SE_EVENT_BUS_HOST=chromedriver
-      - SE_EVENT_BUS_PUBLISH_PORT=4442
-      - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
-    ports:
-      - "4444:4444"
-      - "5900:5900"
-      - "7900:7900"
-    networks:
-      - airflow-network
+  # chrome:
+  #   image: seleniarm/standalone-chromium:latest
+  #   container_name: chrome
+  #   shm_size: 2gb
+  #   depends_on:
+  #     - chromedriver
+  #   environment:
+  #     - SE_EVENT_BUS_HOST=chromedriver
+  #     - SE_EVENT_BUS_PUBLISH_PORT=4442
+  #     - SE_EVENT_BUS_SUBSCRIBE_PORT=4443
+  #   ports:
+  #     - "4444:4444"
+  #     - "5900:5900"
+  #     - "7900:7900"
+  #   networks:
+  #     - airflow-network
 
-  chromedriver:
-    image: seleniarm/hub:latest
-    container_name: chromedriver
-    ports:
-      - "4442:4442"
-      - "4443:4443"
-    networks:
-      - airflow-network
-    depends_on:
-      <<: *airflow-common-depends-on
-      airflow-init:
-        condition: service_completed_successfully
+  # chromedriver:
+  #   image: seleniarm/hub:latest
+  #   container_name: chromedriver
+  #   ports:
+  #     - "4442:4442"
+  #     - "4443:4443"
+  #   networks:
+  #     - airflow-network
+  #   depends_on:
+  #     <<: *airflow-common-depends-on
+  #     airflow-init:
+  #       condition: service_completed_successfully
 
 networks:
   airflow-network:

@@ -47,7 +47,7 @@
 
 import aiohttp
 
-from src.core.types import (
+from crawling.src.core.types import (
     SelectHtmlOrJson,
     UrlStatusCodeOrUrlAddress,
     SelectResponseType,

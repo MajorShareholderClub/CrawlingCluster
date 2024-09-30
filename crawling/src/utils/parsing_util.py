@@ -1,5 +1,7 @@
 from __future__ import annotations
 from pydantic import BaseModel
+from collections import Counter
+import pandas as pd
 
 import pytz
 from datetime import timedelta, datetime
@@ -88,6 +90,16 @@ def parse_time_ago(time_str: str) -> str:
             return date_obj.strftime("%Y-%m-%d")
 
 
+def url_news_text(url: str) -> str:
+    try:
+        a = Article(url=url, language="ko")
+        a.download()
+        a.parse()
+        return a.text
+    except:
+        pass
+
+
 class NewsDataFormat(BaseModel):
     url: str
     title: str
@@ -105,11 +117,112 @@ class NewsDataFormat(BaseModel):
         return cls(**kwargs)
 
 
-def url_news_text(url: str) -> str:
-    try:
-        a = Article(url=url, language="ko")
-        a.download()
-        a.parse()
-        return a.text
-    except:
-        pass
+class NewsWeightScoring:
+    def __init__(
+        self,
+        content: str,
+        published_date: datetime,
+        timestamp: datetime,
+    ) -> None:
+        """
+        Args:
+            content (str): 기사 본문
+            keywords (list[str]): 키워드 (가상화폐 및 관련 카테고리)
+            published_date (datetime): 기사 생성 날짜
+            timestamp (datetime): 현재 날짜
+        """
+        self.content = content
+        self.keywords = pd.read_csv("config/keywords.csv")
+        self.published_date = published_date
+        self.current_date = timestamp
+
+    def find_keywords(self) -> dict[str, int]:
+        """
+        Returns:
+            dict: 발견된 키워드와 그 개수를 포함하는 딕셔너리
+        """
+        found_keywords = (
+            keyword
+            for keyword in self.keywords
+            for keyword in re.findall(rf"\b{re.escape(keyword)}\b", self.content)
+        )
+        keyword_count = Counter(found_keywords)
+        return keyword_count.most_common()
+
+    def calculate_length_weight(self) -> float:
+        """
+        Returns:
+            float: 기사의 길이에 따른 가중치 (최대 0.1점)
+        """
+        word_count = len(self.content.split())
+        weight = min((word_count / 1000) * 0.01, 0.1)
+        return weight
+
+    def calculate_sentence_keyword_weight(self) -> float:
+        """
+        Returns:
+            float: 문장당 키워드 개수에 대한 가중치 (최대 0.3점)
+        """
+        sentences = self.content.split(".")
+        valid_sentence_count = sum(
+            1
+            for sentence in sentences
+            if any(keyword in sentence for keyword in self.keywords)
+        )
+        total_sentences = len(sentences)
+        weight = 0.0
+
+        if total_sentences > 0:
+            keyword_ratio = valid_sentence_count / total_sentences
+            if valid_sentence_count >= 4:
+                weight = 0.3 * min(keyword_ratio * 1.0, 1.0)
+
+        return weight
+
+    def calculate_valid_keyword_weight(self) -> float:
+        """
+        Returns:
+            float: 유효 키워드 개수 및 비율에 대한 가중치 (최대 0.2점)
+        """
+        keyword_count = self.find_keywords()
+        valid_keyword_count = sum(keyword_count.values())
+        total_word_count = len(self.content.split())
+        weight = 0.0
+
+        if valid_keyword_count >= 30:
+            weight += 0.1
+
+        keyword_percentage = (
+            (valid_keyword_count / total_word_count) * 0.1
+            if total_word_count > 0
+            else 0.0
+        )
+        weight += keyword_percentage
+        return weight
+
+    def calculate_date_weight(self) -> float:
+        """
+        Returns:
+            float: 기사 날짜 기준 최신 순 가중치 (최대 0.4점)
+        """
+        cal_day: int = (self.current_date - self.published_date).days
+        quarters_passed = cal_day // 90
+
+        weight = max(0.4 - (quarters_passed * 0.1), 0.0)
+        return weight
+
+    def calculate_total_weight(self) -> float:
+        """
+        Returns:
+            float: 총 가중치 점수
+        """
+        length_weight: float = self.calculate_length_weight()
+        date_weight: float = self.calculate_date_weight()
+        sentence_keyword_weight: float = self.calculate_sentence_keyword_weight()
+        valid_keyword_weight: float = self.calculate_valid_keyword_weight()
+
+        total_weight = (
+            length_weight + sentence_keyword_weight + valid_keyword_weight + date_weight
+        )
+
+        return min(total_weight, 1.0)  # 최대 가중치는 1.0

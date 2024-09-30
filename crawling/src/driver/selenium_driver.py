@@ -2,10 +2,10 @@ import time
 import random
 import logging
 from typing import Any, Callable
-from src.core.types import ChromeDriver
+from crawling.src.core.types import ChromeDriver
 from collections import deque
 
-from config.selenium_setting import (
+from crawling.config.selenium_setting import (
     chrome_option_setting,
     WITH_TIME,
     SCORLL_ITERATION,
@@ -16,12 +16,12 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
-from src.utils.logger import AsyncLogger
-from src.core.types import UrlDictCollect
-from src.parsing.news_parsing import (
+from crawling.src.utils.logger import AsyncLogger
+from crawling.src.core.types import UrlDictCollect
+from crawling.src.parsing.news_parsing import (
     GoogleNewsDataCrawling,
     BingNewsDataCrawling,
-    DaumNewsDataCrawling,
+    # DaumNewsDataCrawling,
 )
 
 logging.basicConfig(level=logging.ERROR)
@@ -69,7 +69,7 @@ class GoogleSeleniumMovingElementLocation(GoogleNewsDataCrawling):
         self, start: int, xpath: Callable[[int], str]
     ) -> deque[UrlDictCollect]:
         """페이지 이동"""
-        data = deque()
+        data = []
 
         for i in range(start, self.count + start):
             next_page_button: Any = self.finding_xpath(xpath(i))
@@ -91,14 +91,10 @@ class GoogleSeleniumMovingElementLocation(GoogleNewsDataCrawling):
 
         def mo_xpath_injection(start: int) -> str:
             """google mobile xpath 경로 start는 a tag 기점 a -> a[2]"""
-            # if start == 2:
-            #     return f'//*[@id="wepR4d"]/div/span/a'
             return f'//*[@id="wepR4d"]/div/span/a[{start-1}]'
 
         def pa_xpath_injection(start: int) -> str:
             """google site xpath 경로 start는 tr/td[3](page 2) ~ 기점"""
-            # if start == 1 or 2:
-            #     return '//*[@id="botstuff"]/div/div[3]/table/tbody/tr/td[2]'
             return f'//*[@id="botstuff"]/div/div[3]/table/tbody/tr/td[{start}]/a'
 
         self.driver.get(self.url)
@@ -129,7 +125,7 @@ class BingSeleniumMovingElementLocation(BingNewsDataCrawling):
 
     def repeat_scroll(self) -> UrlDictCollect:
         """Bing은 무한 스크롤이기에 횟수만큼 페이지를 내리도록 하였음"""
-        data = deque()
+        data = []
         self.driver.get(self.url)
 
         # 스크롤 내리기 전 위치
@@ -161,61 +157,61 @@ class BingSeleniumMovingElementLocation(BingNewsDataCrawling):
         return data
 
 
-class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
-    def __init__(self, target: str, count: int) -> None:
-        """
-        Args:
-            target (str): 검색 타겟
-            count (int): 얼마나 수집할껀지
-        """
-        self.url = f"https://search.daum.net/search?w=news&nil_search=btn&DA=NTB&enc=utf8&cluster=y&cluster_page=1&q={target}"
-        self.driver: ChromeDriver = chrome_option_setting()
-        self.count = count if count - 3 <= 0 else count - 3
-        self.logging = AsyncLogger(
-            target="Daum", log_file="Daum_selenium.log"
-        ).log_message_sync
-        # self.count = count - 3
+# class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
+#     def __init__(self, target: str, count: int) -> None:
+#         """
+#         Args:
+#             target (str): 검색 타겟
+#             count (int): 얼마나 수집할껀지
+#         """
+#         self.url = f"https://search.daum.net/search?w=news&nil_search=btn&DA=NTB&enc=utf8&cluster=y&cluster_page=1&q={target}"
+#         self.driver: ChromeDriver = chrome_option_setting()
+#         self.count = count if count - 3 <= 0 else count - 3
+#         self.logging = AsyncLogger(
+#             target="Daum", log_file="Daum_selenium.log"
+#         ).log_message_sync
+#         # self.count = count - 3
 
-    def next_page_moving(self, xpath: str) -> Any:
-        news_box_type: Any = WebDriverWait(self.driver, WITH_TIME).until(
-            EC.presence_of_element_located((By.XPATH, xpath))
-        )
-        return news_box_type
+#     def next_page_moving(self, xpath: str) -> Any:
+#         news_box_type: Any = WebDriverWait(self.driver, WITH_TIME).until(
+#             EC.presence_of_element_located((By.XPATH, xpath))
+#         )
+#         return news_box_type
 
-    def page_injection(self) -> deque[UrlDictCollect]:
-        """
-        //*[@id="dnsColl"]/div[2]/div/div/a[1] 2
-        //*[@id="dnsColl"]/div[2]/div/div/a[2] 3
-        //*[@id="dnsColl"]/div[2]/div/div/a[3] 4
-        //*[@id="dnsColl"]/div[2]/div/div/a[4] 5
-        """
-        self.driver.get(self.url)
-        data = deque()
-        self.logging(logging.INFO, "다음 크롤링 시작합니다")
-        if self.count <= 4:
-            for i in range(1, self.count + 1):
-                page_scroll(self.driver)
-                self.driver.implicitly_wait(random.uniform(5.0, 10.0))
-                time.sleep(1)
-                next_page_button = self.next_page_moving(
-                    f'//*[@id="dnsColl"]/div[2]/div/div/a[{i}]'
-                )
-                data.append(next_page_button)
-                self.news_info_collect(self.driver.page_source)
-                next_page_button.click()
+#     def page_injection(self) -> deque[UrlDictCollect]:
+#         """
+#         //*[@id="dnsColl"]/div[2]/div/div/a[1] 2
+#         //*[@id="dnsColl"]/div[2]/div/div/a[2] 3
+#         //*[@id="dnsColl"]/div[2]/div/div/a[3] 4
+#         //*[@id="dnsColl"]/div[2]/div/div/a[4] 5
+#         """
+#         self.driver.get(self.url)
+#         data = deque()
+#         self.logging(logging.INFO, "다음 크롤링 시작합니다")
+#         if self.count <= 4:
+#             for i in range(1, self.count + 1):
+#                 page_scroll(self.driver)
+#                 self.driver.implicitly_wait(random.uniform(5.0, 10.0))
+#                 time.sleep(1)
+#                 next_page_button = self.next_page_moving(
+#                     f'//*[@id="dnsColl"]/div[2]/div/div/a[{i}]'
+#                 )
+#                 data.append(next_page_button)
+#                 self.news_info_collect(self.driver.page_source)
+#                 next_page_button.click()
 
-        while self.count:
-            page_scroll(self.driver)
-            self.driver.implicitly_wait(random.uniform(5.0, 10.0))
-            time.sleep(1)
-            next_page_button = self.next_page_moving(
-                f'//*[@id="dnsColl"]/div[2]/div/div/a[{3}]'
-            )
-            page = self.news_info_collect(self.driver.page_source)
-            data.append(page)
-            next_page_button.click()
-            self.count -= 1
-        else:
-            self.logging(logging.INFO, "다음 크롤링 종료합니다")
-            self.driver.quit()
-        return data
+#         while self.count:
+#             page_scroll(self.driver)
+#             self.driver.implicitly_wait(random.uniform(5.0, 10.0))
+#             time.sleep(1)
+#             next_page_button = self.next_page_moving(
+#                 f'//*[@id="dnsColl"]/div[2]/div/div/a[{3}]'
+#             )
+#             page = self.news_info_collect(self.driver.page_source)
+#             data.append(page)
+#             next_page_button.click()
+#             self.count -= 1
+#         else:
+#             self.logging(logging.INFO, "다음 크롤링 종료합니다")
+#             self.driver.quit()
+#         return data

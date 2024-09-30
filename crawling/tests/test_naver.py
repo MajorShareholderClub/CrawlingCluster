@@ -5,14 +5,16 @@ import sys
 import asyncio
 import pytest
 from unittest.mock import patch, AsyncMock
-from src.crawlers.naver_news_paring import AsyncNaverNewsParsingDriver
+from crawling.src.driver.api_news_driver import AsyncNaverNewsParsingDriver
 
 
 @pytest.mark.asyncio
 async def test_async_parsing_with_data():
     driver = AsyncNaverNewsParsingDriver(target="비트코인", count=1)
 
-    with patch("src.utils.acquisition.AsyncRequestJSON", autospec=True) as mock_request:
+    with patch(
+        "crawling.src.utils.acquisition.AsyncRequestJSON", autospec=True
+    ) as mock_request:
 
         mock_request.return_value.async_fetch_json = AsyncMock()
 

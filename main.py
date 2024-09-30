@@ -1,21 +1,19 @@
 import asyncio
-from typing import Type, Callable
+from typing import Callable
 
-from src.driver.selenium_driver import (
+from crawling.src.driver.selenium_driver import (
     GoogleSeleniumMovingElementLocation,
     BingSeleniumMovingElementLocation,
-    DaumSeleniumMovingElementsLocation,
 )
-from src.driver.api_news_driver import (
+from crawling.src.driver.api_news_driver import (
     AsyncDaumrNewsParsingDriver,
     AsyncNaverNewsParsingDriver,
 )
 
-SeleniumCrawlingClass = Type[
-    GoogleSeleniumMovingElementLocation
-    | BingSeleniumMovingElementLocation
-    | DaumSeleniumMovingElementsLocation
-]
+SeleniumCrawlingClass = (
+    GoogleSeleniumMovingElementLocation | BingSeleniumMovingElementLocation
+)
+
 
 # fmt: off
 class Crawler:
@@ -54,9 +52,10 @@ class Crawler:
             if hasattr(crawler_class, method_name):
                 if method_name == "news_colletor":
                     tasks.append(asyncio.create_task(crawler_class(self.query, self.count).news_colletor()))
-                else: 
+                else:
                     tasks.append(asyncio.create_task(self.process_crawling(crawler_class, method_name)))
         return await asyncio.gather(*tasks)
+
 
 # 사용 예
 if __name__ == "__main__":

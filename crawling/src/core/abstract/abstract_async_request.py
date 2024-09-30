@@ -2,12 +2,12 @@ from abc import ABC, abstractmethod
 
 import aiohttp
 
-from src.core.types import (
+from crawling.src.core.types import (
     SelectHtmlOrJson,
     SelectResponseType,
     UrlStatusCodeOrUrlAddress,
 )
-from src.utils.logger import AsyncLogger
+from crawling.src.utils.logger import AsyncLogger
 
 # fmt: off
 class AbstractAsyncRequestAcquisition(ABC):
