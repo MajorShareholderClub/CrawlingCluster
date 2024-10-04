@@ -16,7 +16,7 @@ SelectHtmlOrJson = SelectHtml | SelectJson
 UrlStatusCodeOrUrlAddress = Union[str, UrlStatus]
 
 SelectResponseType = Union[SelectHtmlOrJson, UrlStatusCodeOrUrlAddress] | None
-UrlDictCollect = Deque[dict[str, str]]
+UrlDictCollect = list[dict[str, str]]
 
 
 ChromeDriver = uc.Chrome

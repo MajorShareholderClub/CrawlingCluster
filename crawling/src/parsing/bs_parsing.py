@@ -80,6 +80,18 @@ class InvestingNewsCrawlingParsingSelenium:
         )
 
 
+class InvestingNewsCrawlingTargetNews:
+    def extract_news_textdiv(self, div_tag: BeautifulSoup) -> str:
+        """기사의 게시 날짜 (timestamp) 추출"""
+        time_tag = div_tag.find("div", {"class": "textDiv"})
+        return time_tag
+
+    def find_article_elements(self, html: str) -> list[BeautifulSoup]:
+        """HTML에서 기사의 주요 요소들을 추출"""
+        soup = BeautifulSoup(html, "lxml")
+        return soup.find_all("div", {"class": "articleItem"})
+
+
 class GoogleNewsCrawlingParsingRequest:
     def extract_content_url(self, div_tag: BeautifulSoup) -> str:
         """URL 추출

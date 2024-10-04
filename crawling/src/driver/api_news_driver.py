@@ -35,7 +35,7 @@ class AsyncNaverNewsParsingDriver(NaverDaumAsyncDataCrawling):
             "X-Naver-Client-Id": naver_id,
             "X-Naver-Client-Secret": naver_secret,
         }
-        self.url = f"{naver_url}/news.json?query={target}&start=1&display={count}"
+        self.url = f"{naver_url}/news.json?query={target}&start=1&display={count*10}"
 
         super().__init__(
             target, url=self.url, home="naver", count=count, header=self.header
@@ -54,7 +54,7 @@ class AsyncDaumrNewsParsingDriver(NaverDaumAsyncDataCrawling):
     def __init__(self, target: str, count: int) -> None:
         """생성자 초기화"""
         self.header = {"Authorization": f"KakaoAK {daum_auth}"}
-        self.url = f"{daum_url}?query={target} /news&page=1&size={count}"
+        self.url = f"{daum_url}?query={target} /news&page=1&size={count*10}"
 
         super().__init__(
             target, url=self.url, home="daum", count=count, header=self.header
@@ -86,7 +86,7 @@ class AsyncGoogleNewsParsingDriver(GoogleAsyncDataReqestCrawling):
             home="google",
             count=count,
             param=self.params,
-            header=self.headers,
+            header=None,
         )
 
     async def news_collector(self) -> UrlDictCollect:

@@ -1,14 +1,26 @@
 from __future__ import annotations
 from pydantic import BaseModel
 from collections import Counter
-import pandas as pd
 
 import pytz
 from datetime import timedelta, datetime
 from dateutil import parser
 
 import re
+import pandas as pd
 from bs4 import BeautifulSoup
+
+import time
+import random
+from selenium.webdriver.chrome.webdriver import WebDriver as ChromeDriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.common.exceptions import (
+    TimeoutException,
+    NoSuchElementException,
+    ElementNotInteractableException,
+)
 
 
 def time_extract(format: str) -> str:
@@ -81,7 +93,6 @@ def parse_time_ago(time_str: str) -> str:
             time_delta = timedelta(days=value)
 
         # 현재 시간에서 delta를 빼기
-        print(now, time_delta, now - time_delta)
         parsed_time: datetime = now - time_delta
         return parsed_time.strftime("%Y-%m-%d %H:%M")
     except TypeError as error:
@@ -218,3 +229,75 @@ class NewsWeightScoring:
         )
 
         return min(total_weight, 1.0)  # 최대 가중치는 1.0
+
+
+class PageScroller:
+    def __init__(self, driver: ChromeDriver, second_delay: bool = False) -> None:
+        self.driver = driver
+        self.second_delay = second_delay
+        self.scroll_heights = [int(random.uniform(1000, 3000)) for _ in range(5)]
+
+    def delay_function(self, i: int) -> None:
+        if i % 3 == 0:
+            print(i, "1초쉽니다")
+            time.sleep(1)
+
+    def fast_scroll(self, scroll_cal: int) -> None:
+        """빠르게 스크롤"""
+        current_position = self.driver.execute_script("return window.pageYOffset;")
+        self.driver.execute_script(
+            f"window.scrollTo(0, {current_position + scroll_cal})"
+        )
+
+    def smooth_type_scroll(
+        self, scroll: int, steps: int = 10, delay: float = 0.05
+    ) -> None:
+        current_position = self.driver.execute_script("return window.pageYOffset;")
+        step_size = scroll / steps
+
+        for i in range(steps):
+            self.driver.execute_script(
+                f"window.scrollTo(0, {current_position + (step_size * (i + 1))})"
+            )
+            if self.second_delay:
+                self.delay_function(i)
+
+            time.sleep(delay)
+
+    def check_and_close_popup(self) -> bool:
+        try:
+            popup_xpath = '//*[@id="PromoteSignUpPopUp"]/div[2]/i'
+            popup = WebDriverWait(self.driver, 1).until(
+                EC.presence_of_element_located((By.XPATH, popup_xpath))
+            )
+            self.driver.execute_script("arguments[0].click();", popup)
+            popup.click()
+            return True
+        except (
+            TimeoutException,
+            NoSuchElementException,
+            ElementNotInteractableException,
+        ):
+            return False
+
+    def page_scroll(self) -> None:
+        """스크롤을 5번에 걸쳐서 내리기, 3가지 스크롤 케이스 포함"""
+        self.driver.implicitly_wait(10)
+
+        # 3가지 스크롤 케이스 실행
+        for scroll_distance in self.scroll_heights:
+            popup = self.check_and_close_popup()
+            if popup:
+                print("팝업이 감지되어 닫습니다.")
+
+            # 랜덤 스크롤 시작
+            scroll_type = random.choice(["smooth", "fast", "slow"])
+            if scroll_type == "smooth":
+                print(f"부드러운 스크롤 실행 중: {scroll_distance}px")
+                self.smooth_type_scroll(scroll_distance, steps=50, delay=0.2)
+            elif scroll_type == "fast":
+                print(f"빠른 스크롤 실행 중: {scroll_distance}px")
+                self.fast_scroll(scroll_distance)
+            elif scroll_type == "slow":
+                print(f"느린 스크롤 실행 중: {scroll_distance}px")
+                self.smooth_type_scroll(scroll_distance, steps=30, delay=0.3)
