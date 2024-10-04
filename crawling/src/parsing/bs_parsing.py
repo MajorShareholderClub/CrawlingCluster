@@ -5,7 +5,7 @@ from bs4 import BeautifulSoup
 from crawling.src.utils.parsing_util import parse_time_ago
 
 
-class GoogleNewsCrawlingParsingDrive:
+class GoogleNewsCrawlingParsingSelenium:
     """
     Google News Parsing Drive
     """
@@ -43,7 +43,6 @@ class GoogleNewsCrawlingParsingDrive:
         Returns:
             list[BeautifulSoup]: ["요소들"]
         """
-
         return parse_time_ago(
             div_tag.find("div", {"class": "OSrXXb rbYSKb LfVVr"}).text
         )
@@ -63,81 +62,51 @@ class GoogleNewsCrawlingParsingDrive:
         return process_html(html=html)
 
 
-class BingNewsCrawlingParsingDrive:
-    """
-    bing News Parsing Drive
+class InvestingNewsCrawlingParsingSelenium:
 
-    """
+    def extract_content_url(self, li_tag: BeautifulSoup) -> str:
+        """기사의 URL을 추출"""
+        return li_tag.find("a", {"data-test": "article-title-link"})
 
-    def __init__(self, target: str, count: int) -> None:
-        """크롤링 초기화
-        Args:
-            target (str): 긁어올 타겟
-            count (int): 횟수
-        """
-        super().__init__(target, count)
+    def extract_timestamp(self, li_tag: BeautifulSoup) -> str:
+        """기사의 게시 날짜 (timestamp) 추출"""
+        return li_tag.find("time", {"data-test": "article-publish-date"})
 
-    def div_in_class(self, element: BeautifulSoup, target: str) -> list[BeautifulSoup]:
-        """bing page 요소 두번째 접근 단계
-
-        Args:
-            element (BeautifulSoup)
-        Returns:
-            list[BeautifulSoup]: ["요소들", ~~]
-        """
-        return element.find_all("div", {"class": target})
-
-    def detection_element(
-        self, html_source: str, *element: str
-    ) -> tuple[BeautifulSoup]:
-        """Bing HTML element 요소 추출하기
-
-        Args:
-            html_source (str) : HTML
-            element (tuple[BeautifulSoup]) : HTML에 div new를 담기고 있는 후보들
-                - ex)
-                \n
-                <div class="algocore">
-                    <div class="news-card newsitem cardcommon">
-                        뉴스
-                    </div>
-                </div>
-
-                <div class="nwscnt">
-                    <div class="newscard vr">
-                        뉴스
-                    </div>
-                </div<
-
-        Return: (tuple[str, str])
-            - 파악된 요소들
-        """
-        pattern = r'class="([^"]+)"'
-        class_values: set[BeautifulSoup] = set(
-            element for element in re.findall(pattern, html_source)
+    def find_article_elements(self, html: str) -> list[BeautifulSoup]:
+        """HTML에서 기사의 주요 요소들을 추출"""
+        soup = BeautifulSoup(html, "lxml")
+        return soup.find_all(
+            "div", {"class": "news-analysis-v2_content__z0iLP w-full text-xs sm:flex-1"}
         )
-        data: tuple[str, ...] = tuple(elem for elem in element if elem in class_values)
-        return data
 
-    def news_create_time_from_div(self, element: BeautifulSoup) -> str:
+
+class GoogleNewsCrawlingParsingRequest:
+    def extract_content_url(self, div_tag: BeautifulSoup) -> str:
+        """URL 추출
+        <div class="Gx5Zad xpd EtOod pkphOe"><a data-ved=string + 뒤쪽 4자리 무작위 난수 href=target></div>
+        """
+        a_tags = div_tag.find("a")
+        urls = re.search(r"/url\?q=(https?://[^\s&]+)", a_tags["href"])
+        return urls.group(1)
+
+    def news_create_time_from_div(self, div_tag: BeautifulSoup) -> str:
         """날짜 추출
-        >>> <div class="t_t">
-                <div class="source set_top">
-                    <span aria-label="55 minutes ago" tabindex="0">
-                        55m (이부분)
-                    </span>
+        <div class="BNeawe s3v9rd AP7Wnd">
+            <div>
+                <div class="BNeawe s3v9rd AP7Wnd">
+                    <span class="r0bn4c rQMQod">
+                        target
+                    </spen>
                 </div>
             </div>
-
-        Return: (str)
-            - 3d, 3h~~
+        </div
         """
-        return element.find("div", {"class": "t_t"}).find("span", {"tabindex": "0"})
+        return parse_time_ago(div_tag.find("span", {"class": "r0bn4c rQMQod"}).text)
 
-    def div_class_algocore(self, html: str, attrs: dict) -> list[BeautifulSoup]:
+    def div_start(self, html: str) -> list[BeautifulSoup]:
         """첫번째 요소 추출 시작점"""
         soup = BeautifulSoup(html, "lxml")
-        return soup.find_all("div", attrs)
+        return soup.find_all("div", {"class": "Gx5Zad xpd EtOod pkphOe"})
 
 
 class DaumNewsCrawlingParsingDrive:

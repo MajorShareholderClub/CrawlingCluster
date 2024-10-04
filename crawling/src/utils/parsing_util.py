@@ -9,7 +9,6 @@ from dateutil import parser
 
 import re
 from bs4 import BeautifulSoup
-from newspaper import Article
 
 
 def time_extract(format: str) -> str:
@@ -31,9 +30,6 @@ def href_from_a_tag(a_tag: BeautifulSoup, element: str = "href") -> str:
     Returns:
         str: [URL, ~~]
     """
-    if isinstance(a_tag, tuple):
-        element = a_tag[1]
-        return a_tag[0].get(element)
     return a_tag.get(element)
 
 
@@ -61,7 +57,6 @@ def parse_time_ago(time_str: str) -> str:
     Returns:
         str: 한국 시간으로부터 주어진 시간 만큼 이전의 시간 (YYYY-MM-DD HH:MM 형식)
     """
-
     try:
         korea_tz = pytz.timezone("Asia/Seoul")
         now = datetime.now(korea_tz)
@@ -73,6 +68,10 @@ def parse_time_ago(time_str: str) -> str:
         match = re.match(r"(\d+)\s*(시간|h|분|m|초|일|d)?\s*전?", time_str)
         value = int(match.group(1))
         unit = match.group(2)
+
+        if unit is None:
+            return time_str
+
         # 단위에 따른 시간 차이 계산
         if unit in ["시간", "h"]:
             time_delta = timedelta(hours=value)
@@ -82,22 +81,15 @@ def parse_time_ago(time_str: str) -> str:
             time_delta = timedelta(days=value)
 
         # 현재 시간에서 delta를 빼기
+        print(now, time_delta, now - time_delta)
         parsed_time: datetime = now - time_delta
         return parsed_time.strftime("%Y-%m-%d %H:%M")
-    except Exception as error:
+    except TypeError as error:
         date_obj = datetime.strptime(time_str, "%Y.%m.%d")
         if date_obj:
             return date_obj.strftime("%Y-%m-%d")
-
-
-def url_news_text(url: str) -> str:
-    try:
-        a = Article(url=url, language="ko")
-        a.download()
-        a.parse()
-        return a.text
-    except:
-        pass
+    except Exception as error:
+        return None
 
 
 class NewsDataFormat(BaseModel):
@@ -105,7 +97,7 @@ class NewsDataFormat(BaseModel):
     title: str
     article_time: str
     timestamp: str
-    content: str | None
+    time_ago: str
 
     @classmethod
     def create(cls, **kwargs) -> NewsDataFormat:

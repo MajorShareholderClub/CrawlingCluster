@@ -65,9 +65,9 @@ def chrome_option_setting() -> uc.Chrome:
     # )
     webdirver_chrome = uc.Chrome(
         options=option_chrome,
-        enable_cdp_events=True,
-        incognito=True,
-        headless=True,
+        # enable_cdp_events=True,
+        # incognito=True,
+        # headless=True,
         service=Service(ChromeDriverManager(driver_version="129.0.6668.58").install()),
     )
     stealth(
