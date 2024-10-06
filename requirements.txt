@@ -16,6 +16,7 @@ JPype1
 
 apache-airflow
 apache-airflow-providers-mysql
+apache-airflow[amazon]
 pymysql
 boto3
 
