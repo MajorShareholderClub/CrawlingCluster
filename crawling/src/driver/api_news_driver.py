@@ -70,7 +70,7 @@ class AsyncGoogleNewsParsingDriver(GoogleAsyncDataReqestCrawling):
 
     def __init__(self, target: str, count: int) -> None:
         self.params = {
-            "q": "BTC",
+            "q": f"{target}",
             "tbm": "nws",
             "gl": "ko",
             "hl": "kr",

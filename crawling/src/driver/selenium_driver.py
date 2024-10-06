@@ -1,5 +1,4 @@
 import tracemalloc
-import re
 
 tracemalloc.start()
 
@@ -23,7 +22,6 @@ from selenium.common.exceptions import (
     ElementClickInterceptedException,
     TimeoutException,
 )
-
 from crawling.src.utils.logger import AsyncLogger
 from crawling.src.utils.parsing_util import PageScroller
 from crawling.src.parsing.news_parsing import (
