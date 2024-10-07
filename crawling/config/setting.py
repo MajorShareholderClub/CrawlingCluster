@@ -111,4 +111,4 @@ class BasicAsyncNewsDataCrawling:
         self.param = param
         self._logging = AsyncLogger(
             target=home, log_file=f"{home}_crawling.log"
-        ).log_message_sync
+        ).log_message_async

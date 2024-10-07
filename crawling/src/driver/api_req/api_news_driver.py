@@ -1,15 +1,17 @@
 """
-=========================================================================================================== test session starts ===========================================================================================================
-테스트 성공 시간 --> 2024년 9월 15일 AM 01시 24분
-platform darwin -- Python 3.12.3, pytest-8.3.3, pluggy-1.5.0
+========================================================================================= test session starts =========================================================================================
+
+platform darwin -- Python 3.12.6, pytest-8.3.3, pluggy-1.5.0
 rootdir: /Users/imhaneul/Documents/project/JuJuClub/CrawlingCluster
 configfile: pyproject.toml
-plugins: asyncio-0.24.0, Faker-28.4.1
+plugins: asyncio-0.24.0, anyio-4.6.0, Faker-28.4.1
 asyncio: mode=Mode.STRICT, default_loop_scope=function
-collected 1 item                                                                                                                                                                                                                          
+collected 3 items                                                                                                                                                                                     
 
-test_naver.py .  [100%]                                                                                                                                                                                                                   
-============================================================================================================ 1 passed in 0.84s ============================================================================================================
+test_api_req.py ...                                                                                                                                                                            
+
+[100%]
+========================================================================================= 3 passed in 10.06s ==========================================================================================
 """
 
 from crawling.config.properties import (
@@ -19,7 +21,7 @@ from crawling.config.properties import (
     daum_auth,
     daum_url,
 )
-from crawling.src.parsing.news_parsing import (
+from crawling.src.driver.news_parsing import (
     NaverDaumAsyncDataCrawling,
     GoogleAsyncDataReqestCrawling,
 )
@@ -48,7 +50,7 @@ class AsyncNaverNewsParsingDriver(NaverDaumAsyncDataCrawling):
         return data
 
 
-class AsyncDaumrNewsParsingDriver(NaverDaumAsyncDataCrawling):
+class AsyncDaumNewsParsingDriver(NaverDaumAsyncDataCrawling):
     """다음 크롤링"""
 
     def __init__(self, target: str, count: int) -> None:

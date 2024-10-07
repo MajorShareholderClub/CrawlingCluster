@@ -47,7 +47,7 @@ class AsyncLogger:
         self.queue_listener.start()
 
         self.logger = self._setup_logger()
-        # self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
+        self.loop: asyncio.AbstractEventLoop = asyncio.get_event_loop()
 
     def _setup_queue_handler(self) -> QueueHandler:
         """
@@ -122,15 +122,15 @@ class AsyncLogger:
         """
         return self.logger
 
-    # async def log_message(self, level: int, message: str) -> None:
-    #     """
-    #     비동기적으로 메시지 로그
+    async def log_message_async(self, level: int, message: str) -> None:
+        """
+        비동기적으로 메시지 로그
 
-    #     Args:
-    #         - level (int): 로그 레벨 (예: logging.INFO)
-    #         - message (str): 로그할 메시지
-    #     """
-    #     await self.loop.run_in_executor(None, self._log_message, level, message)
+        Args:
+            - level (int): 로그 레벨 (예: logging.INFO)
+            - message (str): 로그할 메시지
+        """
+        await self.loop.run_in_executor(None, self._log_message, level, message)
 
     def log_message_sync(self, level: int, message: str) -> None:
         """

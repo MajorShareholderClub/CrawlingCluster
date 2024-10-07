@@ -2,12 +2,12 @@ import asyncio
 from typing import Callable
 from concurrent.futures import ThreadPoolExecutor
 
-from crawling.src.driver.selenium_driver import (
+from crawling.src.driver.investing.investing_selenium import (
     InvestingSeleniumMovingElementLocation,
     InvestingTargetSeleniumMovingElementLocation,
 )
-from crawling.src.driver.api_news_driver import (
-    AsyncDaumrNewsParsingDriver,
+from crawling.src.driver.api_req.api_news_driver import (
+    AsyncDaumNewsParsingDriver,
     AsyncNaverNewsParsingDriver,
     AsyncGoogleNewsParsingDriver,
 )
@@ -37,9 +37,9 @@ class Crawler:
 
         # 비동기 크롤러 클래스와 메서드의 매핑
         crawlers = [
-            # (AsyncNaverNewsParsingDriver, "news_collector"),
-            # (AsyncDaumrNewsParsingDriver, "news_collector"),
-            # (AsyncGoogleNewsParsingDriver, "news_collector"),
+            (AsyncNaverNewsParsingDriver, "news_collector"),
+            (AsyncDaumNewsParsingDriver, "news_collector"),
+            (AsyncGoogleNewsParsingDriver, "news_collector"),
             (InvestingSeleniumMovingElementLocation, "crawling_main"),
             (InvestingTargetSeleniumMovingElementLocation, "crawling_main"),
         ]
