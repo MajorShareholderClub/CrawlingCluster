@@ -19,6 +19,7 @@ apache-airflow-providers-mysql
 apache-airflow[amazon]
 pymysql
 boto3
+motor
 
 
 pydantic
