@@ -26,13 +26,13 @@
 ----------------------------
 | AsyncRequestHTML Class |
 ----------------------------
-- async def async_fetch_content(url: str) -> SelectHtmlOrJson: 
+- async def async_fetch_content(url: str) -> SelectHtml: 
     ---> 주어진 URL에서 HTML 데이터를 비동기적으로 가져오는 함수입니다.
 
 ----------------------------
 | AsyncRequestJSON Class |
 ----------------------------
-- async def async_fetch_content(url: str) -> SelectHtmlOrJson: 
+- async def async_fetch_content(url: str) -> SelectJson: 
     ---> 주어진 URL에서 JSON 데이터를 비동기적으로 가져오는 함수입니다.
 
 ------------
@@ -51,6 +51,8 @@ from crawling.src.core.types import (
     SelectHtmlOrJson,
     UrlStatusCodeOrUrlAddress,
     SelectResponseType,
+    SelectHtml,
+    SelectJson,
 )
 
 # fmt: off
@@ -75,8 +77,8 @@ class AsyncRequestUrlStatus(AsyncRequestAcquisitionHTML):
 
 
 class AsyncRequestHTML(AsyncRequestAcquisitionHTML):
-    async def async_fetch_content(url: str) -> SelectHtmlOrJson: ...
+    async def async_fetch_content(url: str) -> SelectHtml: ...
 
     
 class AsyncRequestJSON(AsyncRequestAcquisitionHTML):
-    async def async_fetch_content(url: str) -> SelectHtmlOrJson: ...
+    async def async_fetch_content(url: str) -> SelectJson: ...

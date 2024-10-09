@@ -1,10 +1,11 @@
 import asyncio
 import logging
 from itertools import chain
+from typing import Generator
 
 from bs4 import BeautifulSoup
-from crawling.src.core.types import SelectJson, SelectHtml, UrlDictCollect
 from crawling.config.setting import BasicAsyncNewsDataCrawling
+from crawling.src.core.types import SelectJson, SelectHtml, UrlDictCollect
 from crawling.src.utils.acquisition import AsyncRequestJSON, AsyncRequestHTML
 from crawling.src.utils.parsing_util import (
     href_from_text_preprocessing,
@@ -13,13 +14,13 @@ from crawling.src.utils.parsing_util import (
     time_extract,
     NewsDataFormat,
 )
-from crawling.src.parsing.bs_parsing import (
-    InvestingNewsCrawlingParsingSelenium as InvestingSeleniumNews,
-    InvestingNewsCrawlingTargetNews as InvestingSeleniumTargetNews,
-    GoogleNewsCrawlingParsingSelenium as GooglSeleniumeNews,
-    GoogleNewsCrawlingParsingRequest as GoogleReqestNews,
+from crawling.src.driver import (
+    DaumSeleniumNews, 
+    InvestingSeleniumNews, 
+    InvestingSeleniumTargetNews, 
+    GoogleReqestNews, 
+    GooglSeleniumeNews
 )
-
 
 def data_format_create(
     title: str, article_time: str, url: str, time_ago: str
@@ -33,6 +34,7 @@ def data_format_create(
     ).model_dump()
 
 
+# get selenium
 class GoogleNewsDataSeleniumCrawling(GooglSeleniumeNews):
     def extract_format(self, tag: BeautifulSoup) -> NewsDataFormat:
         """
@@ -55,13 +57,71 @@ class GoogleNewsDataSeleniumCrawling(GooglSeleniumeNews):
             for a_tag in self.extract_links_from_div(div_1)
         )
 
-    def news_info_collect(self, html: str) -> UrlDictCollect:
+    def extract_news_urls(self, html: str) -> UrlDictCollect:
         """수집 시작점"""
         start = self.div_in_data_hveid(html=html)
         data = list(chain.from_iterable(self.extract_format(html) for html in start))
         return data
 
 
+# get request
+class GoogleAsyncDataReqestCrawling(BasicAsyncNewsDataCrawling):
+    async def fetch_page_urls(self) -> SelectHtml:
+        """JSON 비동기 호출
+        Args:
+            url (str): URL
+            headers (dict[str, str]): 해더
+        Returns:
+            dict: JSON
+        """
+        try:
+            load_f = AsyncRequestHTML(
+                url=self.url, params=self.param, headers=self.header
+            )
+            urls = await load_f.async_fetch_html(target=self.home)
+            return urls
+        except ConnectionError as error:
+            self._logging(
+                logging.ERROR, f"{self.home} 기사를 가져오지 못햇습니다 --> {error}"
+            )
+            return False
+
+    # fmt: off
+    def extract_format(self, driver: GoogleReqestNews, tag: BeautifulSoup) -> NewsDataFormat:
+        """
+        HTML에서 뉴스 데이터를 생성하는 제너레이터 함수.
+
+        Args:
+            driver (GoogleReqestNews): 파싱드라이버
+
+        Yields:
+            dict: 뉴스 제목, 기사 시간, URL, context가 포함된 딕셔너리
+        """
+        return data_format_create(
+            url=driver.extract_content_url(tag),
+            title=href_from_text_preprocessing(tag.get_text()),
+            article_time=driver.news_create_time_from_div(tag),
+            time_ago=driver.news_create_time_from_div(tag)
+        )
+
+    async def extract_news_urls(self) -> UrlDictCollect:
+        """수집 시작점"""
+        await self._logging(logging.INFO, f"{self.home} 시작합니다")
+
+        # parsing driver
+        parsing = GoogleReqestNews()
+        
+        res_data = await self.fetch_page_urls()
+        if res_data:
+            start = parsing.div_start(html=res_data)
+
+            data = [self.extract_format(parsing, i) for i in start]
+            await self._logging(logging.INFO, f"{self.home}에서 --> {len(data)}개 의 뉴스 수집")
+
+            return data
+
+            
+# Investing Selenium
 class InvestingNewsDataSeleniumCrawling(InvestingSeleniumNews):
     def extract_format(self, tag: BeautifulSoup) -> NewsDataFormat:
         """
@@ -93,6 +153,7 @@ class InvestingNewsDataSeleniumCrawling(InvestingSeleniumNews):
         return data
 
 
+# Investing Selenium
 class InvestingNewsDataTargetSeleniumCrawling(InvestingSeleniumTargetNews):
     def extract_format(self, tag: BeautifulSoup) -> NewsDataFormat:
         """
@@ -121,6 +182,7 @@ class InvestingNewsDataTargetSeleniumCrawling(InvestingSeleniumTargetNews):
         return data
 
 
+# api request format json (Naver Daum)
 class NaverDaumAsyncDataCrawling(BasicAsyncNewsDataCrawling):
     async def fetch_page_urls(self) -> SelectJson:
         """JSON 비동기 호출
@@ -161,66 +223,47 @@ class NaverDaumAsyncDataCrawling(BasicAsyncNewsDataCrawling):
         Returns:
             UrlDictCollect: [URL, ~]
         """
-        self._logging(logging.INFO, f"{self.home} 시작합니다")
+        await self._logging(logging.INFO, f"{self.home} 시작합니다")
         res_data = await self.fetch_page_urls()
 
         data = [self.extract_format(item=item, **kwargs) for item in res_data[element]]
         s = await asyncio.gather(*data)
-        self._logging(logging.INFO, f"{self.home}에서 --> {len(s)}개 의 뉴스 수집")
+        await self._logging(logging.INFO, f"{self.home}에서 --> {len(s)}개 의 뉴스 수집")
         return s
 
 
-class GoogleAsyncDataReqestCrawling(BasicAsyncNewsDataCrawling):
-    async def fetch_page_urls(self) -> SelectHtml:
-        """JSON 비동기 호출
-        Args:
-            url (str): URL
-            headers (dict[str, str]): 해더
-        Returns:
-            dict: JSON
-        """
-        try:
-            load_f = AsyncRequestHTML(
-                url=self.url, params=self.param, headers=self.header
-            )
-            urls = await load_f.async_fetch_html(target=self.home)
-            return urls
-        except ConnectionError as error:
-            self._logging(
-                logging.ERROR, f"{self.home} 기사를 가져오지 못햇습니다 --> {error}"
-            )
-            return False
+# Daum Selenium
+class DaumNewsDataCrawling(DaumSeleniumNews):
 
-    # fmt: off
-    def extract_format(self, driver: GoogleReqestNews, tag: BeautifulSoup) -> NewsDataFormat:
+    def extract_format(self, tag: str) -> Generator:
         """
         HTML에서 뉴스 데이터를 생성하는 제너레이터 함수.
 
         Args:
-            html (BeautifulSoup): 뉴스 페이지의 HTML 내용
+            tag (str): 뉴스 페이지의 HTML 내용
 
         Yields:
             dict: 뉴스 제목, 기사 시간, URL, context가 포함된 딕셔너리
         """
-        return data_format_create(
-            url=driver.extract_content_url(tag),
-            title=href_from_text_preprocessing(tag.get_text()),
-            article_time=driver.news_create_time_from_div(tag),
-            time_ago=driver.news_create_time_from_div(tag)
+        return (
+            data_format_create(
+                title=self.strong_in_class(div_2).find("a").get_text(strip=True),
+                article_time=self.span_in_class(div_2).get_text(strip=True),
+                url_type=(self.strong_in_class(div_2).find("a")),
+            )
+            for div_2 in self.li_in_data_docid(tag)
         )
 
-    async def extract_news_urls(self) -> UrlDictCollect:
-        """수집 시작점"""
-        self._logging(logging.INFO, f"{self.home} 시작합니다")
+    def news_info_collect(self, html: str) -> list[dict[str, str]]:
+        """HTML 소스에서 요소 추출을 시작함.
 
-        # parsing driver
-        parsing = GoogleReqestNews()
-
-        res_data = await self.fetch_page_urls()
-
-        start = parsing.div_start(html=res_data)
-
-        data = [self.extract_format(parsing, i) for i in start]
-        self._logging(logging.INFO, f"{self.home}에서 --> {len(data)}개 의 뉴스 수집")
-
+        Args:
+            html_source (str): HTML 소스 코드 문자열.
+        Returns:
+            list[dict[str, str, str]]: 각 뉴스 항목에 대한 'url', 'date', 'title'을 포함하는 딕셔너리 리스트.
+        """
+        start = self.ul_class_c_list_basic(html=html, attrs={"class": "c-list-basic"})
+        data = list(chain.from_iterable(self.extract_format(div_1) for div_1 in start))
         return data
+
+

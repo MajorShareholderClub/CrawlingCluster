@@ -113,7 +113,7 @@ class AsyncRequestJSON(AsyncRequestAcquisitionHTML):
 class AsyncRequestHTML(AsyncRequestAcquisitionHTML):
     """HTML 데이터 호출"""
 
-    async def async_fetch_html(self, target) -> SelectHtml:
+    async def async_fetch_html(self, target: str) -> SelectHtml:
         """URL에서 HTML 데이터를 비동기로 가져옴.
 
         Returns:
