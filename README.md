@@ -23,10 +23,10 @@ python main.py
 ├── 📂 config                          # 🗂️ 설정 관련 파일을 모아둔 디렉토리
 ├── 📂 crawling                        # 📡 크롤링 관련 코드와 리소스를 담고 있는 디렉토리
 │   ├── 📂 config                     # 🛠️ 크롤링 설정 파일 모음
-│   │   ├── 🐍 keywords.csv           # 키워드 목록을 담고 있는 CSV 파일
+│   │   ├── 📜 keywords.csv           # 키워드 목록을 담고 있는 CSV 파일
 │   │   ├── 🐍 properties.py          # 크롤링 관련 기본 속성 및 설정 값 관리 모듈
 │   │   ├── 🐍 setting.py             # 크롤링 설정 관련 모듈
-│   │   └── 🐍 url.conf               # API 엔드포인트 URL 설정 파일
+│   │   └── ⚙️ url.conf               # API 엔드포인트 URL 설정 파일 (숨김)
 │   └── 📂 src                        # 🚀 크롤링 소스 코드
 │       ├── 📂 core                   # ⚙️ 크롤링의 핵심 로직 및 구조
 │       │   ├── 📂 abstract           # 📝 추상화된 클래스들을 모아둔 하위 디렉토리
@@ -59,7 +59,7 @@ python main.py
 │           ├── 🐍 logger.py            # 로그 관리 모듈
 │           ├── 🐍 parsing_util.py      # 데이터 파싱 관련 유틸리티 함수
 │           └── 🐍 search_util.py       # 검색 관련 유틸리티 함수
-├── 🐳 docker-compose.yml             # Docker 컴포즈 설정 파일
+├── 🐳 docker-compose.yml             # 셀레니움 컴포즈 설정 파일
 ├── 📂 logs                           # 📝 로그 파일 디렉토리
 ├── 🐍 main.py                        # 메인 실행 스크립트
 ├── 🔧 poetry.lock                    # Poetry 패키지 종속성 관리 파일
