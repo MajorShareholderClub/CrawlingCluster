@@ -15,12 +15,13 @@ from crawling.src.utils.parsing_util import (
     NewsDataFormat,
 )
 from crawling.src.driver import (
-    DaumSeleniumNews, 
-    InvestingSeleniumNews, 
-    InvestingSeleniumTargetNews, 
-    GoogleReqestNews, 
-    GooglSeleniumeNews
+    DaumSeleniumNews,
+    InvestingSeleniumNews,
+    InvestingSeleniumTargetNews,
+    GoogleReqestNews,
+    GooglSeleniumeNews,
 )
+
 
 def data_format_create(
     title: str, article_time: str, url: str, time_ago: str
@@ -106,7 +107,7 @@ class GoogleAsyncDataReqestCrawling(BasicAsyncNewsDataCrawling):
 
     async def extract_news_urls(self) -> UrlDictCollect:
         """수집 시작점"""
-        await self._logging(logging.INFO, f"{self.home} 시작합니다")
+        self._logging(logging.INFO, f"{self.home} 시작합니다")
 
         # parsing driver
         parsing = GoogleReqestNews()
@@ -116,11 +117,11 @@ class GoogleAsyncDataReqestCrawling(BasicAsyncNewsDataCrawling):
             start = parsing.div_start(html=res_data)
 
             data = [self.extract_format(parsing, i) for i in start]
-            await self._logging(logging.INFO, f"{self.home}에서 --> {len(data)}개 의 뉴스 수집")
+            self._logging(logging.INFO, f"{self.home}에서 --> {len(data)}개 의 뉴스 수집")
 
             return data
 
-            
+
 # Investing Selenium
 class InvestingNewsDataSeleniumCrawling(InvestingSeleniumNews):
     def extract_format(self, tag: BeautifulSoup) -> NewsDataFormat:
@@ -223,12 +224,12 @@ class NaverDaumAsyncDataCrawling(BasicAsyncNewsDataCrawling):
         Returns:
             UrlDictCollect: [URL, ~]
         """
-        await self._logging(logging.INFO, f"{self.home} 시작합니다")
+        self._logging(logging.INFO, f"{self.home} 시작합니다")
         res_data = await self.fetch_page_urls()
 
         data = [self.extract_format(item=item, **kwargs) for item in res_data[element]]
         s = await asyncio.gather(*data)
-        await self._logging(logging.INFO, f"{self.home}에서 --> {len(s)}개 의 뉴스 수집")
+        self._logging(logging.INFO, f"{self.home}에서 --> {len(s)}개 의 뉴스 수집")
         return s
 
 
@@ -265,5 +266,3 @@ class DaumNewsDataCrawling(DaumSeleniumNews):
         start = self.ul_class_c_list_basic(html=html, attrs={"class": "c-list-basic"})
         data = list(chain.from_iterable(self.extract_format(div_1) for div_1 in start))
         return data
-
-
