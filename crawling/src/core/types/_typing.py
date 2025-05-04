@@ -1,22 +1,12 @@
-from typing import Union, TypedDict, Any, Deque, NewType
-import undetected_chromedriver as uc
+from common.types._typing_crawling import *  # noqa: F401,F403
 
+# This module now re-exports all crawling-related typing aliases from the shared
+# `common` package so that existing imports such as
+#     from crawling.src.core.types import UrlDictCollect
+# continue to work without changes, while ensuring a **single source of truth**
+# for these type definitions across the entire code-base.
 
-HTML = NewType("HTML", str)
-
-
-class UrlStatus(TypedDict):
-    status: int | str
-
-
-SelectHtml = HTML
-SelectJson = dict[str, str | int]
-SelectHtmlOrJson = SelectHtml | SelectJson
-
-UrlStatusCodeOrUrlAddress = Union[str, UrlStatus]
-
-SelectResponseType = Union[SelectHtmlOrJson, UrlStatusCodeOrUrlAddress] | None
-UrlDictCollect = list[dict[str, str]]
-
-
-ChromeDriver = uc.Chrome
+__all__ = [
+    # Re-export every symbol explicitly defined in the shared typing module.
+    *(__dict__ for __dict__ in globals().keys() if not __dict__.startswith("__")),
+]

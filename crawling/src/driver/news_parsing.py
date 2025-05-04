@@ -4,7 +4,7 @@ from itertools import chain
 from typing import Generator
 
 from bs4 import BeautifulSoup
-from crawling.config.setting import BasicAsyncNewsDataCrawling
+from config.setting import BasicAsyncNewsDataCrawling
 from crawling.src.core.types import SelectJson, SelectHtml, UrlDictCollect
 from crawling.src.utils.acquisition import AsyncRequestJSON, AsyncRequestHTML
 from crawling.src.utils.parsing_util import (

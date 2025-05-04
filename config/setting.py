@@ -1,15 +1,14 @@
+import random
 import undetected_chromedriver as uc
 from fake_useragent import UserAgent
 from selenium_stealth import stealth
-from crawling.src.utils.logger import AsyncLogger
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
-
 
 ua = UserAgent()
 # xpath 와 셀레니움 관련 설정
 PAGE_LOAD_DELEY = 2
 WITH_TIME = 10
-SCORLL_ITERATION = 5
+SCOROLL_ITERATION = 5
 prefs = {
     "profile.default_content_setting_values": {
         "cookies": 2,
@@ -72,12 +71,23 @@ def chrome_option_setting(prefs: dict[str, dict[str, int]] = None) -> uc.Chrome:
         headless=True,
         service=Service(ChromeDriverManager().install()),
     )
+
+    navigator_platform = random.choice(["Win32", "MacIntel", "Linux x86_64"])
+    vendor = random.choice(["Google Inc.", "Apple Computer, Inc."])
+    renderer = random.choice(
+        [
+            "Intel Iris OpenGL Engine",
+            "ANGLE (Intel, Mesa Intel(R) UHD Graphics 620 (CFL GT2), OpenGL 4.6)",
+        ]
+    )
+    webgl_vendor = random.choice(["intel Inc.", "Apple Inc."])
     stealth(
         webdirver_chrome,
-        vendor="Google Inc. ",
-        platform="Win32",
-        webgl_vendor="intel Inc. ",
-        renderer="Intel Iris OpenGL Engine",
+        languages=["ko-KR", "ko", "en-US", "en"],
+        vendor=vendor,
+        platform=navigator_platform,
+        webgl_vendor=webgl_vendor,
+        renderer=renderer,
         fix_hairline=True,
     )
 

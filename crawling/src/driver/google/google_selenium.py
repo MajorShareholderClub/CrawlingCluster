@@ -5,11 +5,11 @@ import asyncio
 from typing import Any, Callable
 
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
-from crawling.config.setting import chrome_option_setting, prefs
+from common.utils.logging_utils import EnhancedLogger
+from config.setting import chrome_option_setting, prefs
 from crawling.src.core.types import UrlDictCollect
 from crawling.src.driver.news_parsing import GoogleNewsDataSeleniumCrawling
 from crawling.src.driver.api_req.api_news_driver import AsyncGoogleNewsParsingDriver
-from crawling.src.utils.logger import AsyncLogger
 from crawling.src.utils.search_util import (
     PageScroller,
     web_element_clicker,
@@ -26,7 +26,6 @@ class GoogleSeleniumMovingElementLocation(GoogleNewsDataSeleniumCrawling):
         self.count = count
         self.url = f"https://www.google.com/search?q={target}&tbm=nws&gl=ko&hl=kr"
         self.driver: ChromeDriver = chrome_option_setting(prefs)
-        self.logging = AsyncLogger("google", "selenium_google.log").log_message_sync
 
     def scroll_through_pages(
         self, start: int, xpath: Callable[[int], str]

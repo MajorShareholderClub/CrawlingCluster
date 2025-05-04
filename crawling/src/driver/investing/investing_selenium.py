@@ -1,22 +1,17 @@
 import time
-import random
 import logging
+import random
 from typing import Any
 
-from crawling.config.setting import chrome_option_setting, prefs
-from crawling.config.properties import (
-    INVESTING_NEWS_BUTTON,
-    INVESTING_CATEGORY,
-    INVESTING_NEWS_NEXT,
-)
-from selenium.webdriver.common.action_chains import ActionChains
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
     TimeoutException,
 )
-from crawling.src.core.types import UrlDictCollect
-from crawling.src.utils.logger import AsyncLogger
-from crawling.src.utils.search_util import PageScroller
+from selenium.webdriver.common.action_chains import ActionChains
+
+from common.types import UrlDictCollect
+from common.utils.logging_utils import EnhancedLogger
+from config.setting import chrome_option_setting, prefs
 from crawling.src.utils.search_util import (
     PageScroller,
     web_element_clicker,
@@ -26,6 +21,15 @@ from crawling.src.driver.news_parsing import (
     InvestingNewsDataSeleniumCrawling,
     InvestingNewsDataTargetSeleniumCrawling as InvestingTargetNews,
 )
+
+
+# Investing 관련 상수
+INVESTING_URL = "https://www.investing.com/"
+INVESTING_NEWS_BUTTON = "//li[@class='nav_news']"
+INVESTING_CATEGORY = (
+    "//div[contains(@class, 'sidebar')]/ul[@class='categoryList newsCat']"
+)
+INVESTING_NEWS_NEXT = "//div[contains(@class, 'pagination')]"
 
 
 class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
@@ -39,7 +43,7 @@ class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
         self.count = count
         self.target = target
         self.driver: ChromeDriver = chrome_option_setting(prefs)
-        self.log = AsyncLogger(
+        self.log = EnhancedLogger(
             "investing", "selenium_investing_news.log"
         ).log_message_sync
         self.log(logging.INFO, f"종합 뉴스 시작합니다")
@@ -122,7 +126,7 @@ class InvestingTargetSeleniumMovingElementLocation(InvestingTargetNews):
         self.count = count
         self.target = target
         self.driver: ChromeDriver = chrome_option_setting()
-        self.logging = AsyncLogger(
+        self.logging = EnhancedLogger(
             "investing", f"selenium_coin_{target}_news.log"
         ).log_message_sync
 

@@ -18,7 +18,7 @@ from selenium.common.exceptions import (
 
 
 from crawling.src.core.types import ChromeDriver
-from crawling.config.setting import WITH_TIME
+from config.setting import WITH_TIME
 
 
 def web_element_clicker(driver: ChromeDriver, xpath: str):

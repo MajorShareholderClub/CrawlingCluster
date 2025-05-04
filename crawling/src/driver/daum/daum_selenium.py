@@ -4,7 +4,7 @@ import logging
 import asyncio
 
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
-from crawling.config.setting import chrome_option_setting, prefs
+from config.setting import chrome_option_setting, prefs
 from crawling.src.core.types import UrlDictCollect
 from crawling.src.utils.logger import AsyncLogger
 from crawling.src.utils.search_util import PageScroller

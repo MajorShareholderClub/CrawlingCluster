@@ -15,7 +15,7 @@ chrome:
     - "5900:5900"
     - "7900:7900"
   networks:
-    - airflow-network
+    - chrome-network
 
 chromedriver:
   image: seleniarm/hub:latest
@@ -24,13 +24,7 @@ chromedriver:
     - "4442:4442"
     - "4443:4443"
   networks:
-    - airflow-network
-  depends_on:
-    <<: *airflow-common-depends-on
-    airflow-init:
-      condition: service_completed_successfully
+    - chrome-network
 
-networks:
-  airflow-network:
-    driver: bridge
+
 

@@ -14,7 +14,7 @@ test_api_req.py ...
 ========================================================================================= 3 passed in 10.06s ==========================================================================================
 """
 
-from crawling.config.properties import (
+from config.properties import (
     naver_id,
     naver_secret,
     naver_url,
