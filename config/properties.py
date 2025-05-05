@@ -108,7 +108,7 @@ class SeleniumSearchUrlSettings(BaseUrlSettings):
 site_api_settings = SiteAPISettings()
 database_settings = DatabaseSettings()
 redis_settings = RedisSettings().from_config()
-selenium_search_url_settings = SeleniumSearchUrlSettings().from_config()
+# selenium_search_url_settings = SeleniumSearchUrlSettings().from_config()
 
 # 기존 변수들을 settings 객체로 대체
 naver_id = site_api_settings.naver_id
@@ -127,9 +127,6 @@ user = database_settings.user
 password = database_settings.password
 redis_clusters = redis_settings.redis_clusters
 
-# 검색 URL 설정
-selenium_daum_url = selenium_search_url_settings.daum_url
-selenium_google_url = selenium_search_url_settings.google_url
 
 # Investing 관련 상수 (crawling/config/properties.py에서 이동)
 INVESTING_NEWS_BUTTON = '//*[@id="bottom-nav-row"]/div[1]/nav/ul/li[5]/div[1]/a'

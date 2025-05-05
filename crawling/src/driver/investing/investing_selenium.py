@@ -1,7 +1,7 @@
 import time
 import logging
 import random
-from typing import Any
+from typing import Any, Dict
 
 from selenium.common.exceptions import (
     ElementClickInterceptedException,
@@ -10,8 +10,7 @@ from selenium.common.exceptions import (
 from selenium.webdriver.common.action_chains import ActionChains
 
 from common.types import UrlDictCollect
-from common.utils.logging_utils import EnhancedLogger
-from config.setting import chrome_option_setting, prefs
+from config.setting import prefs
 from crawling.src.utils.search_util import (
     PageScroller,
     web_element_clicker,
@@ -21,6 +20,7 @@ from crawling.src.driver.news_parsing import (
     InvestingNewsDataSeleniumCrawling,
     InvestingNewsDataTargetSeleniumCrawling as InvestingTargetNews,
 )
+from crawling.src.utils.session_manager import SeleniumSessionManager
 
 
 # Investing 관련 상수
@@ -32,21 +32,27 @@ INVESTING_CATEGORY = (
 INVESTING_NEWS_NEXT = "//div[contains(@class, 'pagination')]"
 
 
-class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
+class InvestingSeleniumMovingElementLocation(
+    InvestingNewsDataSeleniumCrawling, SeleniumSessionManager
+):
     def __init__(self, target: str, count: int) -> None:
         """인베스팅 생성자
 
         Args:
             count (int): 얼마나 긁을것인지
         """
+        # SeleniumSessionManager 초기화
+        SeleniumSessionManager.__init__(self, "investing.com", target, count)
+        # InvestingNewsDataSeleniumCrawling 초기화
+        InvestingNewsDataSeleniumCrawling.__init__(self)
+
         self.url = "https://kr.investing.com"
         self.count = count
         self.target = target
-        self.driver: ChromeDriver = chrome_option_setting(prefs)
-        self.log = EnhancedLogger(
-            "investing", "selenium_investing_news.log"
-        ).log_message_sync
-        self.log(logging.INFO, f"종합 뉴스 시작합니다")
+
+        # 세션 관리 드라이버 초기화
+        self.driver = self.init_driver(custom_prefs=prefs, use_session=True)
+        self.logger.info(f"종합 뉴스 시작합니다")
 
     def wait_and_click(self, driver: ChromeDriver, xpath: str) -> Any | str:
         """웹 클릭 하는 함수"""
@@ -55,7 +61,7 @@ class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
             element = web_element_clicker(driver, xpath=xpath)
             return element, element.text
         except (ElementClickInterceptedException, TimeoutException) as error:
-            self.log(logging.ERROR, f"접근할 수 없습니다 --> {error} 조정합니다")
+            self.logger.error(f"접근할 수 없습니다 --> {error} 조정합니다")
             time.sleep(3)
 
             # 다시 요소를 클릭 가능하게 기다림
@@ -68,10 +74,10 @@ class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
                 return element
             except TimeoutException:
                 time.sleep(3)
-                self.log(logging.ERROR, f"접근할 수 없습니다 --> {error} 기다립니다")
+                self.logger.error(f"접근할 수 없습니다 --> {error} 기다립니다")
                 return False
 
-    def scroll_through_pages(self, x_path: str) -> dict[str, UrlDictCollect]:
+    def scroll_through_pages(self, x_path: str) -> Dict[str, UrlDictCollect]:
         """클릭하고 페이지 이동할 때 쓰는 함수"""
         self.driver.set_page_load_timeout(20.0)
 
@@ -83,14 +89,14 @@ class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
         category = self.wait_and_click(self.driver, x_path)
         ActionChains(self.driver).move_to_element(category[0]).click().perform()
 
-        self.log(logging.INFO, f"{category[1]} 부분 -- {self.count} 페이지 수집합니다")
+        self.logger.info(f"{category[1]} 부분 -- {self.count} 페이지 수집합니다")
 
         page_data = {}
         for i in range(1, self.count + 1):
             next_page = f"{INVESTING_NEWS_NEXT}/a[{i}]"
             element = self.wait_and_click(self.driver, next_page)
 
-            self.log(logging.INFO, f"{category[1]} 부분 -- {i} 페이지 이동합니다")
+            self.logger.info(f"{category[1]} 부분 -- {i} 페이지 이동합니다")
             ActionChains(self.driver).move_to_element(element[0]).click().perform()
 
             PageScroller(self.driver).page_scroll()
@@ -99,7 +105,7 @@ class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
             page: str = self.driver.page_source
             data = len(self.extract_news_urls(page))
             page_data[category[1]] = self.extract_news_urls(page)
-            self.log(logging.INFO, f"{category[1]} 뉴스 -- {data}개 수집")
+            self.logger.info(f"{category[1]} 뉴스 -- {data}개 수집")
 
         return page_data
 
@@ -111,10 +117,14 @@ class InvestingSeleniumMovingElementLocation(InvestingNewsDataSeleniumCrawling):
                 continue
             news_xpath = f"{INVESTING_CATEGORY}/li[{i}]"
             self.scroll_through_pages(x_path=news_xpath)
-        self.driver.quit()
+
+        # 세션 저장 및 드라이버 종료
+        self.close_driver()
 
 
-class InvestingTargetSeleniumMovingElementLocation(InvestingTargetNews):
+class InvestingTargetSeleniumMovingElementLocation(
+    InvestingTargetNews, SeleniumSessionManager
+):
     def __init__(self, target: str, count: int) -> None:
         """
 
@@ -122,17 +132,20 @@ class InvestingTargetSeleniumMovingElementLocation(InvestingTargetNews):
             target (str): 어떤걸 긁을것인지
             count (int): 얼마나 긁을것인지
         """
+        # SeleniumSessionManager 초기화
+        SeleniumSessionManager.__init__(self, "investing.com", target, count)
+        # InvestingTargetNews 초기화
+        InvestingTargetNews.__init__(self)
+
         self.url = f"https://kr.investing.com/search/?q={target}&tab=news"
         self.count = count
         self.target = target
-        self.driver: ChromeDriver = chrome_option_setting()
-        self.logging = EnhancedLogger(
-            "investing", f"selenium_coin_{target}_news.log"
-        ).log_message_sync
 
-        self.logging(
-            logging.INFO,
-            f"""{target} 뉴스 시작합니다 -- {target}뉴스 당 [{count}번 스크롤] 수집합니다""",
+        # 세션 관리 드라이버 초기화
+        self.driver = self.init_driver(custom_prefs=prefs, use_session=True)
+
+        self.logger.info(
+            f"{target} 뉴스 시작합니다 -- {target}뉴스 당 [{count}번 스크롤] 수집합니다"
         )
 
     def investing_target_news_selenium_start(self) -> None:
@@ -144,6 +157,7 @@ class InvestingTargetSeleniumMovingElementLocation(InvestingTargetNews):
 
         data: str = self.driver.page_source
         page_data: UrlDictCollect = self.extract_news_urls(html=data)
-        self.logging(logging.INFO, f"{self.target} 뉴스 -- {len(page_data)}개 수집")
+        self.logger.info(f"{self.target} 뉴스 -- {len(page_data)}개 수집")
 
-        self.driver.quit()
+        # 세션 저장 및 드라이버 종료
+        self.close_driver()

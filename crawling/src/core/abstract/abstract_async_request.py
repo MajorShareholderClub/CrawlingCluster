@@ -7,7 +7,7 @@ from crawling.src.core.types import (
     SelectResponseType,
     UrlStatusCodeOrUrlAddress,
 )
-from crawling.src.utils.logger import AsyncLogger
+from common.utils.logging_utils import EnhancedLogger
 
 # fmt: off
 class AbstractAsyncRequestAcquisition(ABC):
@@ -22,7 +22,10 @@ class AbstractAsyncRequestAcquisition(ABC):
         self.url = url
         self.params = params
         self.headers = headers
-        self.logging = AsyncLogger(target="request", log_file="request.log")
+        self.logging = EnhancedLogger(
+            name="request",
+            file_name="request.log"
+        )
 
     @abstractmethod
     async def async_source(self, response: aiohttp.ClientSession, response_type: str) -> SelectHtmlOrJson: 

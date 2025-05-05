@@ -37,9 +37,7 @@ class AsyncRequestAcquisitionHTML(AbstractAsyncRequestAcquisition):
             elif response_type == "json":
                 return await response.json()
         except Exception as error:
-            self.logging.log_message_sync(
-                logging.ERROR, f"다음과 같은 에러로 가져올 수 없습니다 --> {error}"
-            )
+            self.logging.error(f"다음과 같은 에러로 가져올 수 없습니다 --> {error}")
 
     async def async_request(
         self, response: aiohttp.ClientResponse
@@ -74,12 +72,11 @@ class AsyncRequestAcquisitionHTML(AbstractAsyncRequestAcquisition):
             ) as response:
                 rs: int = random.randint(1, 5)
                 await asyncio.sleep(rs)
-                self.logging.log_message_sync(
-                    logging.INFO,
-                    message=f"""
+                self.logging.info(
+                    f"""
                     {target}에서 다음과 같은 format을 사용했습니다 --> HTML,
                     시간 지연은 --> {rs}초 사용합니다,
-                    """,
+                    """
                 )
                 if type_ == "source":
                     return await self.async_source(response, source)
@@ -91,7 +88,7 @@ class AsyncRequestUrlStatus(AsyncRequestAcquisitionHTML):
     """URL Status(200이 아닐 경우) 또는 주소(200일 경우) 호출"""
 
     async def async_request_status(self) -> UrlStatusCodeOrUrlAddress:
-        self.logging.log_message_sync(logging.INFO, f"URL statue를 요청했습니다")
+        self.logging.info(f"URL statue를 요청했습니다")
         return await self.async_type(type_="request")
 
 
@@ -104,9 +101,7 @@ class AsyncRequestJSON(AsyncRequestAcquisitionHTML):
         Returns:
             SelectJson: JSON 데이터
         """
-        self.logging.log_message_sync(
-            logging.INFO, f"{target}에서 다음과 같은 format을 사용했습니다 --> JSON"
-        )
+        self.logging.info(f"{target}에서 다음과 같은 format을 사용했습니다 --> JSON")
         return await self.async_type(type_="source", source="json", target=target)
 
 

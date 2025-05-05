@@ -3,8 +3,9 @@
 import redis
 import json
 import logging
-from typing import Any, Optional, Dict, Union
+from typing import Any
 from common.utils.error_handling import handle_redis_exceptions
+
 
 # 기본 Redis 설정
 DEFAULT_REDIS_HOST = "127.0.0.1"
@@ -77,8 +78,8 @@ class RedisSingleton:
     def set(
         self,
         key: str,
-        value: Union[str, dict, list, int, float],
-        expiry: Optional[int] = None,
+        value: str | dict | list | int | float,
+        expiry: int | None = None,
     ) -> bool:
         """데이터 저장 (자동 직렬화 지원)
 
@@ -210,7 +211,7 @@ class RedisSingleton:
             return value
 
     @handle_redis_exceptions
-    def hash_getall(self, name: str) -> Dict[str, Any]:
+    def hash_getall(self, name: str) -> dict[str, Any]:
         """해시의 모든 필드 조회
 
         Args:

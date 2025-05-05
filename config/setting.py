@@ -3,6 +3,9 @@ import undetected_chromedriver as uc
 from fake_useragent import UserAgent
 from selenium_stealth import stealth
 from selenium.webdriver.common.desired_capabilities import DesiredCapabilities
+from common.utils.logging_utils import EnhancedLogger
+from dataclasses import dataclass, field
+
 
 ua = UserAgent()
 # xpath 와 셀레니움 관련 설정
@@ -94,31 +97,18 @@ def chrome_option_setting(prefs: dict[str, dict[str, int]] = None) -> uc.Chrome:
     return webdirver_chrome
 
 
+@dataclass
 class BasicAsyncNewsDataCrawling:
-    def __init__(
-        self,
-        target: str,
-        url: str,
-        home: str,
-        count: int | None = None,
-        header: dict[str, str] | None = None,
-        param: dict[str, str | int] | None = None,
-    ) -> None:
-        """API 요청하는 기본적으로 필요한 파라미터
-        Args:
-            target (str): 검색할 제시어
-            url (str): 데이터를 가지고올 URL
-            home (str): 페이지 주체 (google, naver, daum)
-            count (int | None, optional): 얼마나 가지고 올껀지. 기본값 None.
-            header (dict[str, str] | None, optional): 요청 헤더. 기본값 None.
-            param (dict[str, str  |  int] | None, optional): get 파라미터. 기본값 None.
-        """
-        self.target = target
-        self.count = count
-        self.url = url
-        self.home = home
-        self.header = header
-        self.param = param
-        self._logging = AsyncLogger(
-            target=home, log_file=f"{home}_crawling.log"
-        ).log_message_sync
+    target: str
+    url: str
+    home: str
+    count: int | None = None
+    header: dict[str, str] | None = None
+    param: dict[str, str | int] | None = None
+    logger: EnhancedLogger = field(init=False)
+
+    def __post_init__(self) -> None:
+        """EnhancedLogger 인스턴스 초기화"""
+        self.logger = EnhancedLogger(
+            name=self.home, log_level="INFO", file_name=f"{self.home}_crawling.log"
+        )

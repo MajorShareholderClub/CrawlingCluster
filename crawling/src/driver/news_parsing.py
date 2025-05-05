@@ -198,9 +198,7 @@ class NaverDaumAsyncDataCrawling(BasicAsyncNewsDataCrawling):
             urls = await load_f.async_fetch_json(target=self.home)
             return urls
         except ConnectionError as error:
-            self._logging(
-                logging.ERROR, f"{self.home} 기사를 가져오지 못햇습니다 --> {error}"
-            )
+            self.logger.error(f"{self.home} 기사를 가져오지 못햇습니다 --> {error}")
             return False
 
     async def extract_format(self, item: dict[str, str], **kwargs) -> NewsDataFormat:
@@ -224,12 +222,12 @@ class NaverDaumAsyncDataCrawling(BasicAsyncNewsDataCrawling):
         Returns:
             UrlDictCollect: [URL, ~]
         """
-        self._logging(logging.INFO, f"{self.home} 시작합니다")
+        self.logger.info(f"{self.home} 시작합니다")
         res_data = await self.fetch_page_urls()
 
         data = [self.extract_format(item=item, **kwargs) for item in res_data[element]]
         s = await asyncio.gather(*data)
-        self._logging(logging.INFO, f"{self.home}에서 --> {len(s)}개 의 뉴스 수집")
+        self.logger.info(f"{self.home}에서 --> {len(s)}개 의 뉴스 수집")
         return s
 
 

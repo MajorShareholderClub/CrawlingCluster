@@ -19,7 +19,6 @@ from typing import (
     Any,  # Any 사용: 다양한 타입을 허용하는 동적 컨텍스트에 필요
     Callable,
     TypeVar,
-    Protocol,
     ParamSpec,
 )
 
@@ -76,7 +75,7 @@ class EnhancedLogger:
     ) -> None:
         """
         향상된 로거 초기화
-        # Any 사용: 문자열(str), 숫자(int/float), 딕셔너리(dict), 리스트(list), 사용자 정의 객체 등 
+        # Any 사용: 문자열(str), 숫자(int/float), 딕셔너리(dict), 리스트(list), 사용자 정의 객체 등
         # 모든 타입의 컨텍스트 데이터를 로깅할 수 있도록 지원
         # Any 사용: 파이썬 컨텍스트 관리자 프로토콜은 모든 예외 타입을 처리할 수 있어야 함
         Args:
@@ -139,11 +138,15 @@ class EnhancedLogger:
         self.executor = ThreadPoolExecutor(max_workers=2)
 
         # 비동기 지원을 위한 루프 설정
-        self.loop = (
-            asyncio.get_event_loop()
-            if asyncio.get_event_loop_policy().get_event_loop().is_running()
-            else None
-        )
+        try:
+            self.loop = (
+                asyncio.get_event_loop()
+                if asyncio.get_event_loop_policy().get_event_loop().is_running()
+                else None
+            )
+        except RuntimeError:
+            # 스레드에서 실행 중일 때 새 이벤트 루프를 생성하지 않고 None으로 설정
+            self.loop = None
 
     def _setup_handlers(self) -> list[logging.Handler]:
         """로그 핸들러 설정"""

@@ -6,7 +6,7 @@ import asyncio
 from selenium.common.exceptions import NoSuchElementException, WebDriverException
 from config.setting import chrome_option_setting, prefs
 from crawling.src.core.types import UrlDictCollect
-from crawling.src.utils.logger import AsyncLogger
+from common.utils.logging_utils import EnhancedLogger
 from crawling.src.utils.search_util import PageScroller
 from crawling.src.utils.search_util import (
     PageScroller,
@@ -28,9 +28,12 @@ class DaumSeleniumMovingElementsLocation(DaumNewsDataCrawling):
         self.url = f"https://search.daum.net/search?w=news&nil_search=btn&DA=NTB&enc=utf8&cluster=y&cluster_page=1&q={target}"
         self.driver: ChromeDriver = chrome_option_setting(prefs=prefs)
         self.count = count if count - 3 <= 0 else count - 3
-        self.logging = AsyncLogger(
-            target="Daum", log_file="Daum_selenium.log"
-        ).log_message_sync
+        logger = EnhancedLogger(
+            name="Daum",
+            log_level="INFO",
+            file_name="Daum_selenium.log"
+        )
+        self.logging = lambda level, message: getattr(logger, logging.getLevelName(level).lower())(message)
 
     def page_injection(self) -> UrlDictCollect:
         """

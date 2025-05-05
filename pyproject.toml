@@ -32,7 +32,10 @@ dependencies = [
     "webdriver-manager (>=4.0.2,<5.0.0)",
     "newspaper3k (>=0.2.8,<0.3.0)",
     "lxml[html-clean] (>=5.4.0,<6.0.0)",
-    "docker (>=7.1.0,<8.0.0)"
+    "docker (>=7.1.0,<8.0.0)",
+    "redis (>=6.0.0,<7.0.0)",
+    "aioredis (>=2.0.1,<3.0.0)",
+    "scikit-learn (>=1.6.1,<2.0.0)"
 ]
 
 
