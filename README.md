@@ -84,6 +84,11 @@ python test_simple.py
 │   ├── 📂 services                   # 데이터 서비스 모듈
 │   │   └── 📂 data                   # 데이터 처리 서비스
 │   └── 📂 session                    # 세션 관리 모듈
+├── 📂 llm                            # 🧠 LLM 관련 모듈
+│   ├── 📜 README.md                   # LLM 모듈 설명서
+│   ├── 🐍 keyword_extractor.py        # 키워드 추출 모듈
+│   ├── 🐍 keyword_gener.py            # 키워드 생성기 모듈
+│   └── 🐍 query_generator.py          # 쿼리 생성기 모듈
 ├── 🐳 docker-compose.yml             # 도커 컴포즈 설정 파일
 ├── 📂 logs                           # 📝 로그 파일 디렉토리
 ├── 🐍 main.py                        # 메인 실행 스크립트
@@ -91,9 +96,11 @@ python test_simple.py
 ├── 🔧 pyproject.toml                 # 프로젝트 메타데이터와 설정 파일
 ├── 🔧 requirements.txt               # 📝 Python 패키지 종속성 목록
 ├── 🐍 test_simple.py                 # 간단한 테스트 스크립트
-└── 📂 tests                          # 🧪 테스트 코드 디렉토리
-    ├── 🐍 test_api_req.py            # API 요청 테스트 스크립트
-    └── 🐍 sele_driver_test.py        # 셀레니움 드라이버 테스트 스크립트
+├── 📂 tests                          # 🧪 테스트 코드 디렉토리
+│   ├── 🐍 test_api_req.py            # API 요청 테스트 스크립트
+│   └── 🐍 sele_driver_test.py        # 셀레니움 드라이버 테스트 스크립트
+
+```
 
 ## 주요 기능
 
