@@ -21,7 +21,8 @@ from crawling.src.driver.news_parsing import (
     InvestingNewsDataTargetSeleniumCrawling as InvestingTargetNews,
 )
 from crawling.src.utils.session_manager import SeleniumSessionManager
-
+from crawling.src.utils.anti.human_like import AntiRobotSearch, HumanLikeInteraction
+from common.utils.error_handling import SeleniumExceptionType
 
 # Investing 관련 상수
 INVESTING_URL = "https://www.investing.com/"
@@ -56,6 +57,33 @@ class InvestingSeleniumMovingElementLocation(
         # 세션 관리 드라이버 초기화
         self.driver = self.init_driver(custom_prefs=prefs, use_session=True)
         self.logger.info(f"종합 뉴스 시작합니다")
+
+        # 안티봇 기능을 통해 로봇 감지 우회 시도
+        try:
+            self.logger.info("안티봇 기능을 사용하여 드라이버 초기화 중...")
+            self.anti_bot = AntiRobotSearch(self.driver)
+            self.human_like = HumanLikeInteraction(
+                self.driver
+            )  # HumanLikeInteraction 직접 사용
+
+            # 구글 뉴스 검색 결과 페이지로 이동하고 로봇 감지 우회 시도
+            search_success = self.anti_bot.search_with_anti_robot(self.url, self.target)
+
+            # 성공적으로 로봇 감지를 우회하고 검색에 성공한 경우에만 세션 저장
+            if search_success:
+                self.logger.info("로봇 감지 우회 성공! 유효한 세션 저장")
+                self.save_cookies()
+            else:
+                self.logger.warning("로봇 감지 우회 실패. 세션 저장하지 않음")
+
+        except SeleniumExceptionType as e:
+            self.logger.error(f"안티봇 기능 초기화 중 오류: {e}")
+            # 오류 발생 시 기본 URL 접속 시도
+            try:
+                self.driver.get(self.url)
+                time.sleep(random.uniform(2, 4))
+            except Exception as e2:
+                self.logger.error(f"URL 접속 시도 중 추가 오류: {e2}")
 
     def wait_and_click(self, driver: ChromeDriver, xpath: str) -> Any | str:
         """웹 클릭 하는 함수"""
