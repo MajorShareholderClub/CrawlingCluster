@@ -6,94 +6,159 @@ from config.setting import chrome_option_setting
 
 
 class SeleniumSessionManager:
-    """셀레니움 드라이버와 세션 관리를 결합한 기반 클래스
+    """셀레니움 세션 매니저
 
-    이 클래스는 셀레니움 웹 드라이버의 초기화와 세션 관리(쿠키 저장/로드)를
-    자동화하여 블록 방지 및 효율적인 웹 크롤링을 지원합니다.
+    셀레니움을 이용한 크롤링 작업을 위한 세션 관리 클래스입니다.
+    이 클래스는 크롤링 작업을 위한 셀레니움 드라이버를 초기화하고,
+    세션을 저장하고 불러오는 기능을 제공합니다.
     """
 
-    def __init__(self, domain: str, target: str, count: int):
-        """셀레니움 세션 관리자 초기화
+    def __init__(self, domain: str, target: str, count: int) -> None:
+        """셀레니움 세션 매니저 초기화
 
         Args:
-            domain: 크롤링할 도메인 (예: 'google.com', 'investing.com')
-            target: 검색 타겟 또는 크롤링 키워드
+            domain: 크롤링 대상 도메인 (예: 'google.com', 'investing.com')
+            target: 크롤링 대상 URL
             count: 크롤링할 페이지 수
         """
         self.domain = domain
         self.target = target
         self.count = count
 
-        # 로깅 설정
+        # 로거 초기화
         self.logger = EnhancedLogger(
             name=f"selenium_{domain}", file_name=f"selenium_{domain}.log"
         )
 
-        # 세션 관리자 초기화
+        # 세션 매니저 초기화
         self.session_manager = SessionManager()
 
-        # 드라이버 초기화는 하위 클래스에서 필요할 때 init_driver 호출
+        # 셀레니움 드라이버 초기화
         self.driver: ChromeDriver | None = None
 
     def init_driver(self, custom_prefs=None, use_session: bool = True) -> ChromeDriver:
-        """세션 관리 기능이 포함된 크롬 드라이버 초기화
+        """셀레니움 드라이버 초기화
 
         Args:
-            custom_prefs: 사용자 정의 크롬 설정 (기본값: config.setting.prefs)
-            use_session: 세션 재사용 여부 (기본값: True)
+            custom_prefs: 사용자 정의된 크롬 환경 설정 (기본값: config.setting.prefs)
+            use_session: 세션을 사용할지 여부 (기본값: True)
 
         Returns:
-            초기화된 ChromeDriver 인스턴스
+            초기화된 셀레니움 드라이버
         """
 
-        # 크롬 드라이버 기본 초기화
+        # 사용자 정의된 크롬 환경 설정을 사용
         chrome_prefs = custom_prefs if custom_prefs is not None else prefs
         self.driver = chrome_option_setting(chrome_prefs)
 
         if use_session:
-            # 세션을 로드하여 쿠키 및 User-Agent 적용
-            self.logger.info(f"{self.domain} 도메인에 대한 세션 로드 시도")
+            # 세션을 사용하여 드라이버를 초기화
+            self.logger.info(f"{self.domain} 도메인에 대한 세션을 초기화합니다.")
             try:
+                # 세션 적용 시도
                 self.driver = self.session_manager.apply_cookies_and_session(
                     self.driver, self.domain
                 )
-                self.logger.info(f"{self.domain} 세션 로드 성공")
+                self.logger.info(
+                    f"{self.domain} 도메인에 대한 세션이 초기화되었습니다."
+                )
+
+                # 세션 적용 후 캡차 확인 - 세션이 무효화되었는지 검증
+                self.driver.get(f"https://{self.domain}")
+                self.driver.implicitly_wait(5)
+
+                # 캡차 감지 확인
+                from crawling.src.utils.anti_bot_utils import HumanLikeInteraction
+
+                human_like = HumanLikeInteraction(self.driver)
+
+                if human_like.is_robot_page():
+                    self.logger.warning(
+                        f"{self.domain} 세션이 캡차로 차단되었습니다. 세션을 삭제합니다."
+                    )
+                    # 세션이 캡차로 차단된 경우, 해당 세션을 Redis에서 삭제
+                    self.session_manager.clear_cookies(self.domain)
+                    # 세션 없이 드라이버 재생성
+                    self.driver.quit()
+                    self.driver = chrome_option_setting(chrome_prefs)
+                    return self.driver
+
+                # 정상적으로 세션 로드됨
+                self.logger.info(
+                    f"{self.domain} 도메인에 대한 세션이 유효함을 확인했습니다."
+                )
             except Exception as e:
                 self.logger.warning(
-                    f"{self.domain} 세션 로드 실패: {e}. 새 세션으로 진행합니다."
+                    f"{self.domain} 도메인에 대한 세션 초기화 실패: {e}. 세션을 사용하지 않습니다."
                 )
 
         return self.driver
 
+    def delete_session(self) -> None:
+        """현재 도메인의 세션을 삭제
+
+        캡차가 감지되었거나 세션이 더 이상 유효하지 않을 때 호출합니다.
+        """
+        try:
+            # 수정: delete_cookies -> clear_cookies
+            self.session_manager.clear_cookies(self.domain)
+            self.logger.info(f"{self.domain} 도메인에 대한 세션이 삭제되었습니다.")
+        except Exception as e:
+            self.logger.error(f"{self.domain} 도메인에 대한 세션 삭제 실패: {e}")
+
     def save_session(self) -> None:
-        """현재 브라우저 세션(쿠키)을 Redis에 저장"""
+        """현재 세션을 저장
+
+        현재 셀레니움 드라이버의 세션을 저장합니다.
+        """
         if self.driver is None:
-            self.logger.error("드라이버가 초기화되지 않아 세션을 저장할 수 없습니다.")
+            self.logger.error(
+                "드라이버가 초기화되지 않았습니다. 세션을 저장할 수 없습니다."
+            )
             return
 
         try:
-            # 현재 쿠키와 User-Agent 저장
+            # 현재 세션의 쿠키와 User-Agent를 저장
             cookies = self.driver.get_cookies()
             user_agent = self.driver.execute_script("return navigator.userAgent")
 
             self.session_manager.save_cookies(self.domain, cookies, user_agent)
-            self.logger.info(f"{self.domain} 세션 저장 완료 (쿠키 {len(cookies)}개)")
+            self.logger.info(
+                f"{self.domain} 도메인에 대한 세션이 저장되었습니다. ({len(cookies)}개의 쿠키)"
+            )
         except Exception as e:
-            self.logger.error(f"{self.domain} 세션 저장 실패: {e}")
+            self.logger.error(f"{self.domain} 도메인에 대한 세션 저장 실패: {e}")
+
+    def save_cookies(self) -> None:
+        """현재 도메인의 쿠키를 저장
+
+        성공적으로 로그인하거나 캡차를 우회한 후 호출하여 세션을 저장합니다.
+        """
+        try:
+            self.session_manager.save_cookies(self.driver, self.domain)
+            self.logger.info(f"{self.domain} 도메인에 대한 쿠키가 저장되었습니다.")
+        except Exception as e:
+            self.logger.error(f"{self.domain} 도메인에 대한 세션 저장 실패: {e}")
 
     def close_driver(self) -> None:
-        """드라이버 종료 및 세션 저장"""
+        """셀레니움 드라이버를 종료
+
+        현재 셀레니움 드라이버를 종료하고, 세션을 저장합니다.
+        """
         if self.driver is not None:
-            # 세션 저장 후 드라이버 종료
+            # 세션을 저장
             self.save_session()
             try:
                 self.driver.quit()
-                self.logger.info("웹 드라이버 정상 종료")
+                self.logger.info("셀레니움 드라이버가 종료되었습니다.")
             except Exception as e:
-                self.logger.warning(f"웹 드라이버 종료 중 오류: {e}")
+                self.logger.warning(f"셀레니움 드라이버 종료 실패: {e}")
             finally:
                 self.driver = None
 
     def __del__(self):
-        """소멸자에서 드라이버 정리"""
+        """셀레니움 드라이버를 종료
+
+        이 클래스가 삭제될 때, 셀레니움 드라이버를 종료합니다.
+        """
         self.close_driver()

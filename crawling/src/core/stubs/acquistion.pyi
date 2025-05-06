@@ -10,42 +10,42 @@
 -------------------------------------
 - __init__(self, url: str, params: dict[str, str] | None = None, headers: dict[str, str] | None = None) -> None: 
     ---> 클래스 초기화 함수로, 요청할 URL과 선택적인 파라미터, 헤더를 설정합니다.
-- async def async_source(self, response: aiohttp.ClientSession, response_type: str) -> SelectHtmlOrJson: 
+- async def async_source(self, response: httpx.Response, response_type: str) -> SelectHtmlOrJson: 
     ---> 비동기적으로 HTML 또는 JSON 소스를 가져오는 함수입니다.
-- async def async_request(self, response: aiohttp.ClientSession) -> UrlStatusCodeOrUrlAddress: 
+- async def async_request(self, response: httpx.Response) -> UrlStatusCodeOrUrlAddress: 
     ---> 비동기적으로 요청을 실행하여 상태 코드나 URL을 반환합니다.
-- async def async_type(self, type_: str, source: str | None = None) -> SelectResponseType: 
+- async def async_type(self, type_: str, target: str = "", source: str | None = None) -> SelectResponseType: 
     ---> 응답 형식을 선택하여 반환하는 비동기 함수입니다.
 
 -------------------------------
 | AsyncRequestUrlStatus Class |
 -------------------------------
-- async def async_request_status(url: str) -> UrlStatusCodeOrUrlAddress: 
+- async def async_request_status() -> UrlStatusCodeOrUrlAddress: 
     ---> 주어진 URL에 대한 상태 코드를 비동기적으로 확인하는 함수입니다.
 
 ----------------------------
 | AsyncRequestHTML Class |
 ----------------------------
-- async def async_fetch_content(url: str) -> SelectHtml: 
+- async def async_fetch_html(target: str) -> SelectHtml: 
     ---> 주어진 URL에서 HTML 데이터를 비동기적으로 가져오는 함수입니다.
 
 ----------------------------
 | AsyncRequestJSON Class |
 ----------------------------
-- async def async_fetch_content(url: str) -> SelectJson: 
+- async def async_fetch_json(target: str) -> SelectJson: 
     ---> 주어진 URL에서 JSON 데이터를 비동기적으로 가져오는 함수입니다.
 
 ------------
 | Features |
 ------------
-1. 비동기 HTTP 요청 처리: aiohttp 라이브러리를 기반으로 하여 비동기 HTTP 요청을 수행하고, 대규모 네트워크 호출을 비효율 없이 처리할 수 있습니다.
+1. 비동기 HTTP 요청 처리: httpx 라이브러리를 기반으로 하여 비동기 HTTP 요청을 수행하고, 대규모 네트워크 호출을 비효율 없이 처리할 수 있습니다.
 2. 다양한 응답 형식 지원: HTML 및 JSON 형식의 데이터를 처리할 수 있으며, URL 상태 코드도 확인할 수 있습니다.
 3. 유연한 요청 옵션: 요청 시 파라미터와 헤더를 자유롭게 설정하여 유연한 HTTP 요청이 가능합니다.
 4. 확장 가능성: 추가적인 요청 기능을 구현할 수 있도록 AsyncRequestAcquisitionHTML 클래스를 상속하여 확장 가능합니다.
 
 """
 
-import aiohttp
+import httpx
 
 from crawling.src.core.types import (
     SelectHtmlOrJson,
@@ -67,18 +67,18 @@ class AsyncRequestAcquisitionHTML:
     ) -> None:
         ...
     
-    async def async_source(self, response: aiohttp.ClientSession, response_type: str) -> SelectHtmlOrJson: ...
-    async def async_request(self, response: aiohttp.ClientSession) -> UrlStatusCodeOrUrlAddress: ...
-    async def async_type(self, type_: str, source: str | None = None) -> SelectResponseType: ...
+    async def async_source(self, response: httpx.Response, response_type: str) -> SelectHtmlOrJson: ...
+    async def async_request(self, response: httpx.Response) -> UrlStatusCodeOrUrlAddress: ...
+    async def async_type(self, type_: str, target: str = "", source: str | None = None) -> SelectResponseType: ...
 
 
 class AsyncRequestUrlStatus(AsyncRequestAcquisitionHTML):
-    async def async_request_status(url: str) -> UrlStatusCodeOrUrlAddress: ...
+    async def async_request_status(self) -> UrlStatusCodeOrUrlAddress: ...
 
 
 class AsyncRequestHTML(AsyncRequestAcquisitionHTML):
-    async def async_fetch_content(url: str) -> SelectHtml: ...
+    async def async_fetch_html(self, target: str) -> SelectHtml: ...
 
     
 class AsyncRequestJSON(AsyncRequestAcquisitionHTML):
-    async def async_fetch_content(url: str) -> SelectJson: ...
+    async def async_fetch_json(self, target: str) -> SelectJson: ...

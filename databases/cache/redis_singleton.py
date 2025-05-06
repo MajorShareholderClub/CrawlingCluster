@@ -53,12 +53,16 @@ class RedisSingleton:
             self.port = port
             self.db = db
             self.decode_responses = decode_responses
-            self._client = redis.Redis(
+            # Redis 연결 풀링을 사용하여 연결을 재사용
+            pool = redis.ConnectionPool(
                 host=self.host,
                 port=self.port,
                 db=self.db,
                 decode_responses=self.decode_responses,
+                max_connections=100,  # 최대 연결 수
+                health_check_interval=30,  # 연결 상태 체크 간격(초)
             )
+            self._client = redis.Redis(connection_pool=pool)
             self._initialized = True
             logger.info(f"Redis 싱글턴 인스턴스 생성: {host}:{port}, DB={db}")
 

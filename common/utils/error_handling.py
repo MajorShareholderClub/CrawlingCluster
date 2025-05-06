@@ -1,12 +1,12 @@
 import logging
 import functools
 import time
-from typing import TypeVar, Callable, ParamSpec, Union, Any, Type, cast
+from typing import TypeVar, Callable, ParamSpec, Union, Any, cast
 
 from redis.exceptions import RedisError, ConnectionError, ResponseError, TimeoutError
 from redis.cluster import ClusterError
 
-from bs4 import BeautifulSoup, FeatureNotFound, ParserRejectedMarkup
+from bs4 import FeatureNotFound, ParserRejectedMarkup
 from selenium.common.exceptions import (
     WebDriverException,
     TimeoutException,
@@ -31,36 +31,48 @@ P = ParamSpec("P")  # 파라미터 사양
 
 # Redis 관련 예외 타입 정의
 RedisExceptionType = (
-    RedisError | ConnectionError | TimeoutError | ResponseError | ClusterError
+    RedisError,
+    ConnectionError,
+    TimeoutError,
+    ResponseError,
+    ClusterError,
 )
 
 # BeautifulSoup 관련 예외 타입 정의
 ParserExceptionType = (
-    FeatureNotFound | ParserRejectedMarkup | ValueError | AttributeError | IndexError
+    FeatureNotFound,
+    ParserRejectedMarkup,
+    ValueError,
+    AttributeError,
+    IndexError,
 )  # ValueError: BeautifulSoup 관련 값 오류, AttributeError: 요소 속성 접근 오류, IndexError: 인덱스 접근 오류
 
 # Selenium 관련 예외 타입 정의
 SeleniumExceptionType = (
-    WebDriverException
-    | TimeoutException
-    | NoSuchElementException
-    | ElementNotInteractableException
-    | StaleElementReferenceException
-    | ElementClickInterceptedException
-    | JavascriptException
+    WebDriverException,
+    TimeoutException,
+    NoSuchElementException,
+    ElementNotInteractableException,
+    StaleElementReferenceException,
+    ElementClickInterceptedException,
+    JavascriptException,
 )
 
 # HTTP 요청 관련 예외 타입 정의
 RequestExceptionType = (
-    RequestException | Timeout | RequestsConnectionError | ValueError | UnicodeError
+    RequestException,
+    Timeout,
+    RequestsConnectionError,
+    ValueError,
+    UnicodeError,
 )  # ValueError: JSON 파싱 오류 등, UnicodeError: 인코딩 관련 오류
 
 # 모든 크롤링 관련 예외 타입 정의 (위 모든 예외 포함)
 CrawlingExceptionType = (
-    RedisExceptionType
-    | ParserExceptionType
-    | SeleniumExceptionType
-    | RequestExceptionType
+    RedisExceptionType,
+    ParserExceptionType,
+    SeleniumExceptionType,
+    RequestExceptionType,
 )
 
 

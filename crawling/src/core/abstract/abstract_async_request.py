@@ -1,7 +1,6 @@
 from abc import ABC, abstractmethod
 
-import aiohttp
-
+import httpx
 from crawling.src.core.types import (
     SelectHtmlOrJson,
     SelectResponseType,
@@ -28,11 +27,11 @@ class AbstractAsyncRequestAcquisition(ABC):
         )
 
     @abstractmethod
-    async def async_source(self, response: aiohttp.ClientSession, response_type: str) -> SelectHtmlOrJson: 
+    async def async_source(self, response: httpx.Response, response_type: str) -> SelectHtmlOrJson: 
         raise NotImplementedError()
 
     @abstractmethod
-    async def async_request(self, response: aiohttp.ClientSession) -> UrlStatusCodeOrUrlAddress: 
+    async def async_request(self, response: httpx.Response) -> UrlStatusCodeOrUrlAddress: 
         raise NotImplementedError()
 
     @abstractmethod

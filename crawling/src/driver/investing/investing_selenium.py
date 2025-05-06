@@ -35,20 +35,23 @@ INVESTING_NEWS_NEXT = "//div[contains(@class, 'pagination')]"
 class InvestingSeleniumMovingElementLocation(
     InvestingNewsDataSeleniumCrawling, SeleniumSessionManager
 ):
+    """인베스팅 크롤링 셀레니움 location"""
+
     def __init__(self, target: str, count: int) -> None:
         """인베스팅 생성자
 
         Args:
-            count (int): 얼마나 긁을것인지
+            target: 키워드 검색 또는 뉴스
+            count: 스크롤 회수
         """
         # SeleniumSessionManager 초기화
         SeleniumSessionManager.__init__(self, "investing.com", target, count)
-        # InvestingNewsDataSeleniumCrawling 초기화
+        # InvestingNewsDataSeleniumCrawling 초기화 - 상속 순서에 따라 부모 클래스의 __init__이 호출되지 않으므로 명시적 호출
         InvestingNewsDataSeleniumCrawling.__init__(self)
 
-        self.url = "https://kr.investing.com"
-        self.count = count
         self.target = target
+        self.count = count
+        self.url = f"https://kr.investing.com/search/?q={target}&tab=news"
 
         # 세션 관리 드라이버 초기화
         self.driver = self.init_driver(custom_prefs=prefs, use_session=True)
@@ -125,21 +128,23 @@ class InvestingSeleniumMovingElementLocation(
 class InvestingTargetSeleniumMovingElementLocation(
     InvestingTargetNews, SeleniumSessionManager
 ):
+    """인베스팅 크롤링 타겟 셀레니움 location"""
+
     def __init__(self, target: str, count: int) -> None:
         """
 
         Args:
-            target (str): 어떤걸 긁을것인지
-            count (int): 얼마나 긁을것인지
+            target: 전송 필드가 필드 페이지 타겟
+            count: 스크롤 몇번 돌릴지 필드
         """
         # SeleniumSessionManager 초기화
         SeleniumSessionManager.__init__(self, "investing.com", target, count)
-        # InvestingTargetNews 초기화
+        # InvestingTargetNews 초기화 - 상속 순서에 따라 부모 클래스의 __init__이 호출되지 않으므로 명시적 호출
         InvestingTargetNews.__init__(self)
 
-        self.url = f"https://kr.investing.com/search/?q={target}&tab=news"
-        self.count = count
         self.target = target
+        self.count = count
+        self.url = f"https://kr.investing.com/equities/{target}"
 
         # 세션 관리 드라이버 초기화
         self.driver = self.init_driver(custom_prefs=prefs, use_session=True)
@@ -149,15 +154,17 @@ class InvestingTargetSeleniumMovingElementLocation(
         )
 
     def investing_target_news_selenium_start(self) -> None:
-        """긁을 타겟"""
+        """uae08uc744 ud0c0uac9f"""
         self.driver.get(self.url)
 
-        # page 스크롤
+        # page uc2a4ud06cub864
         PageScroller(driver=self.driver, second_delay=True).page_scroll()
 
         data: str = self.driver.page_source
         page_data: UrlDictCollect = self.extract_news_urls(html=data)
-        self.logger.info(f"{self.target} 뉴스 -- {len(page_data)}개 수집")
+        self.logger.info(
+            f"{self.target} ub274uc2a4 -- {len(page_data)}uac1c uc218uc9d1"
+        )
 
-        # 세션 저장 및 드라이버 종료
+        # uc138uc158 uc800uc7a5 ubc0f ub4dcub77cuc774ubc84 uc885ub8cc
         self.close_driver()

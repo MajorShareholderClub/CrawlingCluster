@@ -6,9 +6,9 @@ rootdir: /Users/imhaneul/Documents/project/JuJuClub/CrawlingCluster
 configfile: pyproject.toml
 plugins: asyncio-0.24.0, anyio-4.6.0, Faker-28.4.1
 asyncio: mode=Mode.STRICT, default_loop_scope=function
-collected 3 items                                                                                                                                                                                     
+collected 3 items
 
-test_api_req.py ...                                                                                                                                                                            
+test_api_req.py ...
 
 [100%]
 ========================================================================================= 3 passed in 10.06s ==========================================================================================
@@ -40,7 +40,11 @@ class AsyncNaverNewsParsingDriver(NaverDaumAsyncDataCrawling):
         self.url = f"{naver_url}/news.json?query={target}&start=1&display={count*10}"
 
         super().__init__(
-            target, url=self.url, home="naver", count=count, header=self.header
+            target,
+            url=self.url,
+            home="naver",
+            count=count,
+            header=self.header,
         )
 
     async def news_collector(self) -> UrlDictCollect:
@@ -59,7 +63,11 @@ class AsyncDaumNewsParsingDriver(NaverDaumAsyncDataCrawling):
         self.url = f"{daum_url}?query={target} /news&page=1&size={count*10}"
 
         super().__init__(
-            target, url=self.url, home="daum", count=count, header=self.header
+            target,
+            url=self.url,
+            home="daum",
+            count=count,
+            header=self.header,
         )
 
     async def news_collector(self) -> UrlDictCollect:

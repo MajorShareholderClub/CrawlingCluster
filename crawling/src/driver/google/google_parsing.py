@@ -77,6 +77,7 @@ class GoogleNewsCrawlingParsingRequest:
             </div>
         </div
         """
+        print(div_tag)
         return parse_time_ago(div_tag.find("span", {"class": "r0bn4c rQMQod"}).text)
 
     def div_start(self, html: str) -> list[BeautifulSoup]:
